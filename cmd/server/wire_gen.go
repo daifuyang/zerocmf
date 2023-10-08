@@ -7,13 +7,22 @@
 package main
 
 import (
-	"zerocmf/configs"
+	"zerocmf/internal/data"
+	"zerocmf/internal/server"
+	"zerocmf/internal/svc"
 )
 
 // Injectors from wire.go:
 
 // wireApp init application.
-func wireApp(config configs.Config) *ServiceContext {
-	serviceContext := newApp(config)
-	return serviceContext
+func wireApp(serviceContext *svc.ServiceContext) (App, func(), error) {
+	engine := server.NewHTTPServer(serviceContext)
+	dataData, cleanup, err := data.NewData(serviceContext)
+	if err != nil {
+		return App{}, nil, err
+	}
+	app := newApp(engine, dataData)
+	return app, func() {
+		cleanup()
+	}, nil
 }

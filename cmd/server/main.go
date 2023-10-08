@@ -1,61 +1,32 @@
 package main
 
 import (
-	"database/sql"
 	"flag"
 	"os"
 	"zerocmf/configs"
-
-	_ "github.com/go-sql-driver/mysql"
+	"zerocmf/internal/data"
+	"zerocmf/internal/svc"
 
 	"github.com/gin-gonic/gin"
+
 	"gopkg.in/yaml.v3"
-	gormMysql "gorm.io/driver/mysql"
-	"gorm.io/gorm"
 )
 
 var configFile = flag.String("f", "configs/config.yaml", "the config file")
 
-type ServiceContext struct {
+type App struct {
 	Engine *gin.Engine
-	Db     *gorm.DB
-	Config configs.Config
 }
 
-func (c *ServiceContext) Start() {
-	r := c.Engine
+func (app *App) Run() error {
+	app.Engine.Run()
+	return nil
+}
+
+func newApp(r *gin.Engine, data *data.Data) App {
 	r.Run(":8080")
-}
-
-// 初始数据库连接
-func newGorm(config configs.Config) (db *gorm.DB) {
-	dsn := config.Mysql.Dsn()
-	sqlDb, sqlErr := sql.Open("mysql", dsn)
-	if sqlErr != nil {
-		panic(sqlErr)
-	}
-	defer sqlDb.Close()
-	_, sqlErr = sqlDb.Exec("CREATE DATABASE IF NOT EXISTS " + config.Mysql.Database)
-	if sqlErr != nil {
-		panic(sqlErr)
-	}
-
-	db, err := gorm.Open(gormMysql.Open(config.Mysql.Dsn(true)), &gorm.Config{})
-	if err != nil {
-		panic(err)
-	}
-	return
-}
-
-func newApp(config configs.Config) *ServiceContext {
-	// 初始化gin服务
-	r := gin.New()
-	// 初始化Db数据库
-	db := newGorm(config)
-	return &ServiceContext{
+	return App{
 		Engine: r,
-		Db:     db,
-		Config: config,
 	}
 }
 
@@ -78,7 +49,19 @@ func main() {
 	var config configs.Config
 	mustLoad(*configFile, &config)
 
+	svcCtx := svc.ServiceContext{
+		Config: config,
+	}
+
 	// todo 初始化日志服务
-	e := wireApp(config)
-	e.Start()
+	app, cleanup, err := wireApp(&svcCtx)
+	if err != nil {
+		panic(err)
+	}
+	defer cleanup()
+
+	// start and wait for stop signal
+	if err := app.Run(); err != nil {
+		panic(err)
+	}
 }

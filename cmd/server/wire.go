@@ -6,13 +6,14 @@
 package main
 
 import (
-	"zerocmf/configs"
+	"zerocmf/internal/data"
 	"zerocmf/internal/server"
+	"zerocmf/internal/svc"
 
 	"github.com/google/wire"
 )
 
 // wireApp init application.
-func wireApp(configs.Config) *ServiceContext {
-	panic(wire.Build(server.ProviderSet, newApp))
+func wireApp(*svc.ServiceContext) (App, func(), error) {
+	panic(wire.Build(server.ProviderSet, data.ProviderSet, newApp))
 }
