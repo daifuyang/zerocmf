@@ -1,0 +1,22 @@
+Name: zerocmf
+Host: 0.0.0.0
+Port: 8080
+
+# mysql配置
+Mysql:
+  Host: localhost
+  Database: zerocmf
+  Username: root
+  Password: "123456"
+  Port: 3306
+  Charset: utf8mb4
+  Prefix: cmf_
+  AuthCode: KFHlk2ubIlMr5ltqaD
+
+# redis配置
+Redis:
+  Enabled: true
+  Host: localhost
+  Database: 0
+  Port: 6379
+  Password: ""
