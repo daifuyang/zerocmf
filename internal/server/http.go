@@ -1,10 +1,19 @@
 package server
 
-import "github.com/gin-gonic/gin"
+import (
+	"zerocmf/configs"
+	"zerocmf/internal/service"
+
+	"github.com/gin-gonic/gin"
+)
 
 // NewHTTPServer new an HTTP server.
-func NewHTTPServer(r *gin.Engine) {
+
+func NewHTTPServer(c *configs.Config, test *service.TestService) *gin.Engine {
+	r := gin.New()
 	r.GET("/ping", func(c *gin.Context) {
-		c.String(200, "pong")
+		test.CreateArticle(c.Request.Context())
+		c.JSON(200, "pong")
 	})
+	return r
 }

@@ -4,8 +4,6 @@ import (
 	"flag"
 	"os"
 	"zerocmf/configs"
-	"zerocmf/internal/data"
-	"zerocmf/internal/svc"
 
 	"github.com/gin-gonic/gin"
 
@@ -23,7 +21,7 @@ func (app *App) Run() error {
 	return nil
 }
 
-func newApp(r *gin.Engine, data *data.Data) App {
+func newApp(r *gin.Engine) App {
 	r.Run(":8080")
 	return App{
 		Engine: r,
@@ -49,12 +47,8 @@ func main() {
 	var config configs.Config
 	mustLoad(*configFile, &config)
 
-	svcCtx := svc.ServiceContext{
-		Config: config,
-	}
-
 	// todo 初始化日志服务
-	app, cleanup, err := wireApp(&svcCtx)
+	app, cleanup, err := wireApp(&config)
 	if err != nil {
 		panic(err)
 	}

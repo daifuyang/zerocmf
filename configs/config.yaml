@@ -16,7 +16,6 @@ Mysql:
 # redis配置
 Redis:
   Enabled: true
-  Host: localhost
-  Database: 0
-  Port: 6379
+  Addr: localhost:6379
+  DB: 0
   Password: ""

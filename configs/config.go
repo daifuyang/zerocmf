@@ -48,8 +48,7 @@ func (c *MysqlConfig) Dsn(table ...bool) string {
 // RedisConfig 结构体用于映射Redis配置
 type RedisConfig struct {
 	Enabled  bool   `yaml:"Enabled"`
-	Host     string `yaml:"Host"`
-	Database int    `yaml:"Database"`
-	Port     int    `yaml:"Port"`
+	Addr     string `yaml:"Addr"`
+	Db       int    `yaml:"Db"`
 	Password string `yaml:"Password"`
 }
