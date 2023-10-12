@@ -10,7 +10,7 @@ type testRepo struct {
 	data *Data
 }
 
-// NewArticleRepo .
+// NewTestRepo .
 func NewTestRepo(data *Data) biz.TestRepo {
 	return &testRepo{
 		data: data,

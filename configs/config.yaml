@@ -19,3 +19,11 @@ Redis:
   Addr: localhost:6379
   DB: 0
   Password: ""
+
+# 短信配置
+Sms:
+  AccessKeyId: 111
+  AccessKeySecret: 111
+  Provider: ali
+  SignName: 码上云
+  TemplateCode: SMS_203678233

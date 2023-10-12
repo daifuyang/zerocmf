@@ -9,6 +9,7 @@ type Config struct {
 	Port  int         `yaml:"Port"`
 	Mysql MysqlConfig `yaml:"Mysql"`
 	Redis RedisConfig `yaml:"Redis"`
+	Sms   SmsConfig   `yaml:"Sms"`
 }
 
 // MysqlConfig 结构体用于映射MySQL配置
@@ -51,4 +52,13 @@ type RedisConfig struct {
 	Addr     string `yaml:"Addr"`
 	Db       int    `yaml:"Db"`
 	Password string `yaml:"Password"`
+}
+
+// 生成结构体
+type SmsConfig struct {
+	AccessKeyId     string `yaml:"AccessKeyId"`
+	AccessKeySecret string `yaml:"AccessKeySecret"`
+	Provider        string `yaml:"Provider"`
+	SignName        string `yaml:"SignName"`
+	TemplateCode    string `yaml:"TemplateCode"`
 }

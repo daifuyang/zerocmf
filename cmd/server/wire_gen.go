@@ -22,10 +22,12 @@ func wireApp(config *configs.Config) (App, func(), error) {
 	if err != nil {
 		return App{}, nil, err
 	}
-	testRepo := data.NewTestRepo(dataData)
-	testUsecase := biz.NewTestUsecase(testRepo)
-	testService := service.NewTestService(testUsecase)
-	engine := server.NewHTTPServer(config, testService)
+	userRepo := data.NewUserRepo(dataData)
+	userusecase := biz.NewUserUsecase(userRepo)
+	smsRepo := data.NewSmsRepo(dataData)
+	smsusecase := biz.NewSmsUsecase(smsRepo)
+	context := service.NewContext(config, userusecase, smsusecase)
+	engine := server.NewHTTPServer(context)
 	app := newApp(engine)
 	return app, func() {
 		cleanup()
