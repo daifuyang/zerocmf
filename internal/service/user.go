@@ -2,54 +2,101 @@ package service
 
 import (
 	"fmt"
-	"regexp"
+	"strconv"
 	"strings"
+	"time"
 	"zerocmf/internal/biz"
-	"zerocmf/pkg/code"
+	"zerocmf/internal/utils"
+	"zerocmf/pkg/hashed"
 	"zerocmf/pkg/response"
+	"zerocmf/pkg/sms"
 
 	"github.com/gin-gonic/gin"
+	"golang.org/x/crypto/bcrypt"
+
+	"github.com/go-oauth2/oauth2/v4/server"
 )
 
 // 用户注册
 func (s *Context) Register(c *gin.Context) {
+	ctx := c.Request.Context()
 
 	req := new(biz.Register)
 	c.ShouldBind(&req)
 
 	account := req.Account
 	if strings.TrimSpace(account) == "" {
-		response.Error(c, "手机号或邮箱不能为空！", nil)
+		response.Error(c, "手机号或邮箱不能为空！")
 		return
 	}
 	typ := req.Type
 	if typ == 0 {
-
-		// 正则表达式模式
-		const phonePattern = "^(13[0-9]|14[01456879]|15[0-35-9]|16[2567]|17[0-8]|18[0-9]|19[0-35-9])\\d{8}$"
-		const emailPattern = "^\\w+([-+.]\\w+)*@\\w+([-.]\\w+)*\\.\\w+([-.]\\w+)*$"
-
-		// 编译正则表达式
-		phoneRegexp := regexp.MustCompile(phonePattern)
-		emailRegexp := regexp.MustCompile(emailPattern)
 		// 判断账号类型
-		if phoneRegexp.MatchString(account) {
+		if utils.AccountType(account) == "phone" {
+
+			// 查询当前账号是否存在
+			user, err := s.uc.FindUserByPhoneNumber(ctx, account)
+			if err != nil {
+				response.Error(c, err)
+				return
+			}
+
+			if user != nil {
+				response.Error(c, "该手机号已被注册！")
+				return
+			}
 
 			// 验证验证码
 			code := req.Code
 
+			err = s.smsc.VerifyCode(&biz.Sms{
+				Ctx:       ctx,
+				Code:      code,
+				Account:   account,
+				Type:      "phone",
+				SceneCode: PHONE_REGISTER_SCENE_CODE,
+			})
+
+			if err != nil {
+				response.Error(c, err)
+				return
+			}
+
 			// 输入密码
-
+			pwd := req.Password
 			// 确认密码
+			repwd := req.RePassword
 
-			response.Success(c, "手机号注册", nil)
+			if pwd != repwd {
+				response.Error(c, "两次密码不一致，请重新输入！")
+				return
+			}
+			// 创建用户
+
+			// 密码加盐
+			salt := s.Config.Mysql.Salt
+			hashedPassword, err := hashed.Password(pwd, salt)
+			if err != nil {
+				response.Error(c, "系统错误，创建密码失败！")
+				return
+			}
+			user = &biz.User{
+				PhoneNumber: account,
+				Salt:        salt,
+				Password:    hashedPassword,
+			}
+			err = s.uc.Register(ctx, user)
+			if err != nil {
+				response.Error(c, err)
+				return
+			}
+			response.Success(c, "注册成功！", user)
 			return
-		} else if emailRegexp.MatchString(account) {
+		} else if utils.AccountType(account) == "email" {
 			response.Success(c, "邮箱注册", nil)
 			return
 		}
-
-		response.Error(c, "非法手机号或邮箱！", nil)
+		response.Error(c, "非法手机号或邮箱！")
 		return
 
 	} else {
@@ -61,52 +108,130 @@ func (s *Context) Register(c *gin.Context) {
 func (s *Context) SendRegisterCode(c *gin.Context) {
 	ctx := c.Request.Context()
 
-	req := biz.Register{}
-	c.ShouldBind(&req)
+	req := biz.SmsCode{}
+	// 使用 ShouldBindJSON 方法来解析JSON参数
+	if err := c.ShouldBind(&req); err != nil {
+		response.Error(c, err)
+		return
+	}
 
 	account := req.Account
 	if strings.TrimSpace(account) == "" {
-		response.Error(c, "手机号或邮箱不能为空！", nil)
+		response.Error(c, "手机号或邮箱不能为空！")
 		return
 	}
-	// 正则表达式模式
-	const phonePattern = "^(13[0-9]|14[01456879]|15[0-35-9]|16[2567]|17[0-8]|18[0-9]|19[0-35-9])\\d{8}$"
-	const emailPattern = "^\\w+([-+.]\\w+)*@\\w+([-.]\\w+)*\\.\\w+([-.]\\w+)*$"
 
-	// 编译正则表达式
-	phoneRegexp := regexp.MustCompile(phonePattern)
-	emailRegexp := regexp.MustCompile(emailPattern)
-
-	phoneCode := code.GenerateRandomCode(4)
+	phoneCode := sms.GenerateRandomCode(4)
 
 	// 判断账号类型
-	if phoneRegexp.MatchString(account) {
 
-		//
+	clientIP := c.ClientIP()
+	if utils.AccountType(account) == "phone" {
 		err := s.smsc.SendSms(&biz.Sms{
-			Ctx:  ctx,
-			Code: phoneCode,
+			Ctx:       ctx,
+			Code:      phoneCode,
+			Account:   account,
+			Type:      "phone",
+			ClientIP:  clientIP,
+			SceneCode: PHONE_REGISTER_SCENE_CODE,
 		})
 
 		if err != nil {
+			response.Error(c, err)
 			return
 		}
-
-		templateParam := fmt.Sprintf("{\"code\":\"%s\"}", phoneCode)
-		// 发送短信验证码
-		err = s.sms.SendSms(account, templateParam)
-		if err != nil {
-			response.Error(c, "发送失败！", err.Error())
-			return
-		}
-
-		response.Success(c, "验证为："+templateParam, nil)
+		response.Success(c, "发送成功！", nil)
 		return
-	} else if emailRegexp.MatchString(account) {
+	} else if utils.AccountType(account) == "email" {
 		response.Success(c, "邮箱注册", nil)
 		return
 	}
+	response.Error(c, "非法手机号或邮箱！")
+}
 
-	response.Error(c, "非法手机号或邮箱！", nil)
-	return
+// 用户登录
+func (s *Context) Login(c *gin.Context) {
+
+	oauthConfig := s.oauthConfig
+	srv := s.srv
+
+	ctx := c.Request.Context()
+
+	var req biz.Login
+
+	// 使用 ShouldBindJSON 方法来解析JSON参数
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, err)
+		return
+	}
+
+	account := req.Account
+	password := req.Password
+
+	if strings.TrimSpace(account) == "" {
+		response.Error(c, "账号不能为空！")
+		return
+	}
+
+	user, err := s.uc.FindUserByAccount(ctx, account)
+	if err != nil {
+		response.Error(c, err.Error())
+		return
+	}
+
+	if strings.TrimSpace(password) == "" {
+		response.Error(c, "密码不能为空！")
+		return
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password+user.Salt)); err != nil {
+		response.Error(c, "密码错误！")
+		return
+	}
+
+	authorizeRequest := &server.AuthorizeRequest{
+		ResponseType: "code",
+		ClientID:     oauthConfig.ClientID,
+		RedirectURI:  oauthConfig.RedirectURL,
+		Scope:        "all",
+		UserID:       strconv.FormatInt(int64(user.UserID), 10),
+		// 其他参数根据需求设置
+	}
+
+	// 调用 GetAuthorizeToken 方法处理授权请求
+	tokenInfo, err := srv.GetAuthorizeToken(ctx, authorizeRequest)
+	if err != nil {
+		response.Error(c, "登录失败！")
+		return
+	}
+
+	code := tokenInfo.GetCode()
+	token, err := oauthConfig.Exchange(ctx, code)
+	if err != nil {
+		response.Error(c, "获取失败：")
+		return
+	}
+
+	response.Success(c, "登录成功！", token)
+}
+
+// 校验用户信息
+func (s *Context) AuthMiddleware(c *gin.Context) {
+
+	startTime := time.Now()
+
+	token, err := s.srv.ValidationBearerToken(c.Request)
+	if err != nil {
+		response.Error(c, response.ErrAuth)
+		return
+	}
+	c.Set("userId", token.GetUserID())
+	c.Next()
+
+	// 计算执行时长
+	endTime := time.Now()
+	duration := endTime.Sub(startTime)
+
+	// 记录日志，包括执行时长
+	fmt.Printf("Path: %s, Method: %s, Duration: %s\n", c.Request.URL.Path, c.Request.Method, duration)
 }

@@ -25,10 +25,14 @@ func wireApp(config *configs.Config) (App, func(), error) {
 	userRepo := data.NewUserRepo(dataData)
 	userusecase := biz.NewUserUsecase(userRepo)
 	smsRepo := data.NewSmsRepo(dataData)
-	smsusecase := biz.NewSmsUsecase(smsRepo)
-	context := service.NewContext(config, userusecase, smsusecase)
-	engine := server.NewHTTPServer(context)
-	app := newApp(engine)
+	smsusecase := biz.NewSmsUsecase(smsRepo, config)
+	departmentRepo := data.NewDeparmentRepo(dataData)
+	depatmentusecase := biz.NewDepatmentusecase(departmentRepo)
+	menuRepo := data.NewMenuRepo(dataData)
+	menusecase := biz.NewMenusecase(menuRepo)
+	context := service.NewContext(config, userusecase, smsusecase, depatmentusecase, menusecase)
+	serverServer := server.NewHTTPServer(context)
+	app := newApp(serverServer)
 	return app, func() {
 		cleanup()
 	}, nil

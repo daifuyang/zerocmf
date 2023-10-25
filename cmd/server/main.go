@@ -4,6 +4,7 @@ import (
 	"flag"
 	"os"
 	"zerocmf/configs"
+	"zerocmf/internal/server"
 
 	"github.com/gin-gonic/gin"
 
@@ -13,18 +14,17 @@ import (
 var configFile = flag.String("f", "configs/config.yaml", "the config file")
 
 type App struct {
-	Engine *gin.Engine
+	router *gin.Engine
 }
 
-func (app *App) Run() error {
-	app.Engine.Run()
-	return nil
+func (app *App) Run(addr string) error {
+	return app.router.Run(addr)
 }
 
-func newApp(r *gin.Engine) App {
-	r.Run(":8080")
+func newApp(s *server.Server) App {
+	s.Start()
 	return App{
-		Engine: r,
+		router: s.Router,
 	}
 }
 
@@ -55,7 +55,7 @@ func main() {
 	defer cleanup()
 
 	// start and wait for stop signal
-	if err := app.Run(); err != nil {
+	if err := app.Run(":8080"); err != nil {
 		panic(err)
 	}
 }

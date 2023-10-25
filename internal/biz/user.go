@@ -3,32 +3,32 @@ package biz
 import (
 	"context"
 	"time"
+	"zerocmf/pkg/hashed"
 
 	"gorm.io/gorm"
 )
 
 type User struct {
-	UserID        uint64    `gorm:"primaryKey;autoIncrement;size:20" json:"user_id"`
-	DeptID        *uint64   `gorm:"comment:'部门ID';size:20;type:bigint(20)" json:"dept_id"`
-	LoginName     string    `gorm:"not null;comment:'登录账号';size:30;type:varchar(30)" json:"login_name"`
-	UserName      string    `gorm:"default:'';comment:'用户昵称';size:30;type:varchar(30)" json:"user_name"`
-	UserType      string    `gorm:"default:'00';comment:'用户类型（00系统用户 01注册用户）';size:2;type:varchar(2)" json:"user_type"`
-	Email         string    `gorm:"default:'';comment:'用户邮箱';size:50;type:varchar(50)" json:"email"`
-	PhoneNumber   string    `gorm:"default:'';comment:'手机号码';size:11;type:varchar(11)" json:"phonenumber"`
-	Sex           string    `gorm:"default:'0';comment:'用户性别（0男 1女 2未知）';size:1;type:char(1)" json:"sex"`
-	Avatar        string    `gorm:"default:'';comment:'头像路径';size:100;type:varchar(100)" json:"avatar"`
-	Password      string    `gorm:"default:'';comment:'密码';size:50;type:varchar(50)" json:"-"`
-	Salt          string    `gorm:"default:'';comment:'盐加密';size:20;type:varchar(20)" json:"-"`
-	Status        string    `gorm:"default:'0';comment:'帐号状态（0正常 1停用）';size:1;type:char(1)" json:"status"`
-	DelFlag       string    `gorm:"default:'0';comment:'删除标志（0代表存在 2代表删除）';size:1;type:char(1)" json:"-"`
-	LoginIP       string    `gorm:"default:'';comment:'最后登录IP';size:128;type:varchar(128)" json:"login_ip"`
-	LoginDate     time.Time `gorm:"comment:'最后登录时间'" json:"login_date"`
-	PwdUpdateDate time.Time `gorm:"comment:'密码最后更新时间'" json:"pwd_update_date"`
-	CreateBy      string    `gorm:"default:'';comment:'创建者';size:64;type:varchar(64)" json:"create_by"`
-	CreateTime    time.Time `gorm:"comment:'创建时间'" json:"create_time"`
-	UpdateBy      string    `gorm:"default:'';comment:'更新者';size:64;type:varchar(64)" json:"update_by"`
-	UpdateTime    time.Time `gorm:"comment:'更新时间'" json:"update_time"`
-	Remark        string    `gorm:"comment:'备注';size:500;type:varchar(500)" json:"remark"`
+	UserID      uint64    `gorm:"primaryKey;autoIncrement;size:20" json:"userId"`
+	DeptID      *uint64   `gorm:"index;comment:部门ID;size:20;type:bigint(20)" json:"deptId"`
+	LoginName   string    `gorm:"comment:登录账号;size:30;type:varchar(30)" json:"loginName"`
+	UserName    string    `gorm:"comment:用户昵称;size:30;type:varchar(30)" json:"userName"`
+	UserType    uint      `gorm:"default:1;comment:用户类型（0:系统用户 1:注册用户）;size:2;type:tinyint(2)" json:"userType"`
+	Email       string    `gorm:"default:null;comment:用户邮箱;size:50;type:varchar(50)" json:"email"`
+	PhoneNumber string    `gorm:"default:null;comment:手机号码;size:11;type:varchar(11)" json:"phoneNumber"`
+	Sex         uint      `gorm:"default:0;comment:用户性别（0男 1女 2未知）;size:2;type:tinyint(2)" json:"sex"`
+	Avatar      string    `gorm:"comment:头像路径;size:100;type:varchar(100)" json:"avatar"`
+	Password    string    `gorm:"not null;comment:密码;size:100;type:varchar(100)" json:"password"`
+	Salt        string    `gorm:"comment:盐加密;size:20;type:varchar(20)" json:"salt"`
+	Status      uint      `gorm:"default:0;comment:帐号状态（0：启用 ,1：停用）;size:2;type:tinyint(2)" json:"status"`
+	LoginIP     string    `gorm:"default:'';comment:最后登录IP;size:128;type:varchar(128)" json:"loginIP"`
+	LoginedAt   time.Time `gorm:"autoCreateTime" json:"loginedAt"`
+	PwdUpdateAt time.Time `gorm:"autoUpdateTime" json:"pwdUpdatedAt"`
+	OperateId   uint64    `gorm:"comment:操作人;index" json:"operateId"`
+	CreatedAt   time.Time `gorm:"autoCreateTime;index" json:"createdAt"`
+	UpdatedAt   time.Time `gorm:"autoUpdateTime;index" json:"updatedAt"`
+	DeletedAt   time.Time `gorm:"default:null;comment:删除时间;index" json:"deletedAt"`
+	Remark      string    `gorm:"comment:备注;size:500;type:varchar(500)" json:"remark"`
 }
 
 // TableName 指定表名
@@ -37,14 +37,32 @@ func (*User) TableName() string {
 }
 
 // 数据库迁移
-func (bz *User) AutoMigrate(db *gorm.DB) error {
-	err := db.AutoMigrate(&bz)
-	return err
+func (biz *User) AutoMigrate(db *gorm.DB, salt string) error {
+	err := db.AutoMigrate(&biz)
+	if err != nil {
+		return err
+	}
+	// 创建管理员admin
+
+	password, err := hashed.Password("123456", salt)
+	if err != nil {
+		return err
+	}
+
+	tx := db.Where("login_name", "admin").FirstOrCreate(&User{
+		LoginName: "admin",
+		Password:  password,
+		Salt:      salt,
+	})
+	return tx.Error
 }
 
 // 定义data层接口
 type UserRepo interface {
-	CreateUser(ctx context.Context, user *User) (*User, error)
+	CreateUser(ctx context.Context, user *User) error
+	FindUserByAccount(ctx context.Context, account string) (*User, error)
+	FindUserByUserID(ctx context.Context, UserID uint64) (*User, error)
+	FindUserByPhoneNumber(ctx context.Context, phoneNumber string) (*User, error)
 }
 
 type Userusecase struct {
@@ -63,7 +81,32 @@ type Register struct {
 	Type       uint   `json:"type"`                   // 注册类型 0：邮箱手机号注册，1：账号密码注册
 }
 
+type SmsCode struct {
+	Account string `form:"account"` // 账号 邮箱 手机号
+}
+
+type Login struct {
+	Account  string `json:"account"`  // 账号 邮箱 手机号
+	Code     uint   ` json:"code"`    // 手机验证码
+	Password string `json:"password"` // 密码
+}
+
 // 业务方组装层，调用repo数据层
-func (uc *Userusecase) Register(ctx context.Context) (ps []*User, err error) {
-	return
+func (uc *Userusecase) Register(ctx context.Context, user *User) error {
+	return uc.repo.CreateUser(ctx, user)
+}
+
+// 根据id查询单个用户
+func (uc *Userusecase) FindUserByUserID(ctx context.Context, userID uint64) (*User, error) {
+	return uc.repo.FindUserByUserID(ctx, userID)
+}
+
+// 根据手机号查询单个用户
+func (uc *Userusecase) FindUserByPhoneNumber(ctx context.Context, phoneNumber string) (*User, error) {
+	return uc.repo.FindUserByPhoneNumber(ctx, phoneNumber)
+}
+
+// 根据账号推断手机号，邮箱，登录账号
+func (uc *Userusecase) FindUserByAccount(ctx context.Context, account string) (*User, error) {
+	return uc.repo.FindUserByAccount(ctx, account)
 }

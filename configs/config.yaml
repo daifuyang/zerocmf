@@ -1,6 +1,7 @@
 Name: zerocmf
 Host: 0.0.0.0
 Port: 8080
+Debug: true
 
 # mysql配置
 Mysql:
@@ -11,7 +12,7 @@ Mysql:
   Port: 3306
   Charset: utf8mb4
   Prefix: cmf_
-  AuthCode: KFHlk2ubIlMr5ltqaD
+  Salt: zerocmf2023
 
 # redis配置
 Redis:
@@ -19,6 +20,7 @@ Redis:
   Addr: localhost:6379
   DB: 0
   Password: ""
+  Expiration: 168
 
 # 短信配置
 Sms:
@@ -27,3 +29,4 @@ Sms:
   Provider: ali
   SignName: 码上云
   TemplateCode: SMS_203678233
+  ExpiresTime: 3

@@ -7,6 +7,7 @@ type Config struct {
 	Name  string      `yaml:"Name"`
 	Host  string      `yaml:"Host"`
 	Port  int         `yaml:"Port"`
+	Debug bool        `yaml:"Debug"`
 	Mysql MysqlConfig `yaml:"Mysql"`
 	Redis RedisConfig `yaml:"Redis"`
 	Sms   SmsConfig   `yaml:"Sms"`
@@ -21,7 +22,7 @@ type MysqlConfig struct {
 	Port     int    `yaml:"Port"`
 	Charset  string `yaml:"Charset"`
 	Prefix   string `yaml:"Prefix"`
-	AuthCode string `yaml:"AuthCode"`
+	Salt     string `yaml:"Salt"`
 }
 
 // DSN 格式化
@@ -48,10 +49,11 @@ func (c *MysqlConfig) Dsn(table ...bool) string {
 
 // RedisConfig 结构体用于映射Redis配置
 type RedisConfig struct {
-	Enabled  bool   `yaml:"Enabled"`
-	Addr     string `yaml:"Addr"`
-	Db       int    `yaml:"Db"`
-	Password string `yaml:"Password"`
+	Enabled    bool   `yaml:"Enabled"`
+	Addr       string `yaml:"Addr"`
+	Db         int    `yaml:"Db"`
+	Password   string `yaml:"Password"`
+	Expiration int64  `yaml:"Expiration"`
 }
 
 // 生成结构体
@@ -61,4 +63,5 @@ type SmsConfig struct {
 	Provider        string `yaml:"Provider"`
 	SignName        string `yaml:"SignName"`
 	TemplateCode    string `yaml:"TemplateCode"`
+	ExpiresTime     int64  `yaml:"ExpiresTime"`
 }
