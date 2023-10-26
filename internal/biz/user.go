@@ -20,7 +20,7 @@ type User struct {
 	Avatar      string    `gorm:"comment:头像路径;size:100;type:varchar(100)" json:"avatar"`
 	Password    string    `gorm:"not null;comment:密码;size:100;type:varchar(100)" json:"password"`
 	Salt        string    `gorm:"comment:盐加密;size:20;type:varchar(20)" json:"salt"`
-	Status      uint      `gorm:"default:0;comment:帐号状态（0：启用 ,1：停用）;size:2;type:tinyint(2)" json:"status"`
+	Status      uint      `gorm:"default:1;comment:帐号状态（0：停用 ,1：启用）;size:2;type:tinyint(2)" json:"status"`
 	LoginIP     string    `gorm:"default:'';comment:最后登录IP;size:128;type:varchar(128)" json:"loginIP"`
 	LoginedAt   time.Time `gorm:"autoCreateTime" json:"loginedAt"`
 	PwdUpdateAt time.Time `gorm:"autoUpdateTime" json:"pwdUpdatedAt"`
@@ -59,9 +59,9 @@ func (biz *User) AutoMigrate(db *gorm.DB, salt string) error {
 
 // 定义data层接口
 type UserRepo interface {
+	FindOne(ctx context.Context, id uint64) (*User, error)
 	CreateUser(ctx context.Context, user *User) error
 	FindUserByAccount(ctx context.Context, account string) (*User, error)
-	FindUserByUserID(ctx context.Context, UserID uint64) (*User, error)
 	FindUserByPhoneNumber(ctx context.Context, phoneNumber string) (*User, error)
 }
 
@@ -98,7 +98,7 @@ func (uc *Userusecase) Register(ctx context.Context, user *User) error {
 
 // 根据id查询单个用户
 func (uc *Userusecase) FindUserByUserID(ctx context.Context, userID uint64) (*User, error) {
-	return uc.repo.FindUserByUserID(ctx, userID)
+	return uc.repo.FindOne(ctx, userID)
 }
 
 // 根据手机号查询单个用户

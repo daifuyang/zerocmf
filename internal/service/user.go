@@ -1,10 +1,8 @@
 package service
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
-	"time"
 	"zerocmf/internal/biz"
 	"zerocmf/internal/utils"
 	"zerocmf/pkg/hashed"
@@ -217,9 +215,6 @@ func (s *Context) Login(c *gin.Context) {
 
 // 校验用户信息
 func (s *Context) AuthMiddleware(c *gin.Context) {
-
-	startTime := time.Now()
-
 	token, err := s.srv.ValidationBearerToken(c.Request)
 	if err != nil {
 		response.Error(c, response.ErrAuth)
@@ -227,11 +222,4 @@ func (s *Context) AuthMiddleware(c *gin.Context) {
 	}
 	c.Set("userId", token.GetUserID())
 	c.Next()
-
-	// 计算执行时长
-	endTime := time.Now()
-	duration := endTime.Sub(startTime)
-
-	// 记录日志，包括执行时长
-	fmt.Printf("Path: %s, Method: %s, Duration: %s\n", c.Request.URL.Path, c.Request.Method, duration)
 }

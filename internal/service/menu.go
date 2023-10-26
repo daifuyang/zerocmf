@@ -4,9 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"zerocmf/internal/biz"
+	"zerocmf/pkg/response"
 
+	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
@@ -21,7 +24,7 @@ func NewMenu(c *Context) *menu {
 }
 
 // 解析配置文件
-func mustLoad(configFile string, menu *[]biz.SysMenu) {
+func mustLoad(configFile string, menu *[]*biz.SysMenu) {
 	// 解析配置项
 	data, err := os.ReadFile(configFile)
 	if err != nil {
@@ -33,9 +36,10 @@ func mustLoad(configFile string, menu *[]biz.SysMenu) {
 	}
 }
 
+// 配置文件导入菜单
 func (s *menu) ImportMenu() {
 
-	var menu []biz.SysMenu
+	var menu []*biz.SysMenu
 
 	currentDir, err := os.Getwd()
 	if err != nil {
@@ -48,12 +52,12 @@ func (s *menu) ImportMenu() {
 
 	ctx := context.Background()
 
-	s.recursionMenu(ctx, menu, parentId, "")
+	s.recursionImportMenu(ctx, menu, parentId, "")
 
 }
 
-// 递归菜单
-func (s *menu) recursionMenu(ctx context.Context, menu []biz.SysMenu, parentId int64, perms string) {
+// 递归导入菜单
+func (s *menu) recursionImportMenu(ctx context.Context, menu []*biz.SysMenu, parentId int64, perms string) {
 	for k, v := range menu {
 
 		newPerms := v.Perms
@@ -92,7 +96,77 @@ func (s *menu) recursionMenu(ctx context.Context, menu []biz.SysMenu, parentId i
 		}
 		nextParentId := localOne.MenuID
 		if v.Children != nil {
-			s.recursionMenu(ctx, v.Children, nextParentId, newPerms)
+			s.recursionImportMenu(ctx, v.Children, nextParentId, newPerms)
 		}
 	}
+}
+
+// 递归显示树菜单
+func recursionMenu(menu []*biz.SysMenu, parentId int64) []*biz.SysMenu {
+	var result = make([]*biz.SysMenu, 0)
+	for _, v := range menu {
+		if v.ParentID == parentId {
+			children := recursionMenu(menu, v.MenuID)
+			if len(children) > 0 {
+				v.Children = children
+			}
+			result = append(result, v)
+		}
+	}
+	return result
+	// return menu
+}
+
+// 查看全部菜单树
+func (s *menu) Tree(c *gin.Context) {
+	sysMenu, err := s.mc.Find(c.Request.Context())
+	if err != nil {
+		response.Error(c, err)
+		return
+	}
+	menus := recursionMenu(sysMenu, 0)
+	fmt.Println("menus", menus)
+	response.Success(c, "获取成功！", menus)
+}
+
+// 添加一条菜单
+func (s *menu) Add(c *gin.Context) {
+	var req biz.SysMenu
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, err)
+		return
+	}
+
+	err := s.mc.Insert(c.Request.Context(), &req)
+	if err != nil {
+		response.Error(c, err)
+		return
+	}
+
+	response.Success(c, "添加成功！", req)
+
+}
+
+// 查看一条菜单
+func (s *menu) Show(c *gin.Context) {
+
+}
+
+// 更新一条菜单
+func (s *menu) Update(c *gin.Context) {
+
+}
+
+// 新增和跟新统一逻辑
+func (s *menu) Save(c *gin.Context) {
+
+}
+
+// 删除一条菜单
+func (s *menu) Delete(c *gin.Context) {
+
+}
+
+// 批量删除菜单
+func (s *menu) DeleteBatch(c *gin.Context) {
 }

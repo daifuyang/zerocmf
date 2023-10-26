@@ -6,25 +6,23 @@ import (
 	"zerocmf/configs"
 	"zerocmf/internal/server"
 
-	"github.com/gin-gonic/gin"
-
 	"gopkg.in/yaml.v3"
 )
 
 var configFile = flag.String("f", "configs/config.yaml", "the config file")
 
 type App struct {
-	router *gin.Engine
+	*server.Server
 }
 
 func (app *App) Run(addr string) error {
-	return app.router.Run(addr)
+	app.Server.Start() // 启动服务
+	return app.Router.Run(addr)
 }
 
 func newApp(s *server.Server) App {
-	s.Start()
 	return App{
-		router: s.Router,
+		Server: s,
 	}
 }
 

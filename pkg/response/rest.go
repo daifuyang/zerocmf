@@ -56,7 +56,6 @@ func Error(c *gin.Context, msg interface{}) {
 			code = http.StatusNotFound
 		}
 	}
-
 	c.JSON(code, res)
 	c.Abort()
 

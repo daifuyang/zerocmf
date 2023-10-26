@@ -42,10 +42,18 @@ func RegisterHTTPServer(router *gin.Engine, svcCtx *service.Context) {
 		system := v1.Group("/system")
 		{
 			system.Use(svcCtx.AuthMiddleware)
-			system.GET("/dept", service.NewDeparment(svcCtx).Tree)
-			system.GET("/dept/:id", service.NewDeparment(svcCtx).Show)
-			system.POST("/dept", service.NewDeparment(svcCtx).Add)
-			system.POST("/dept/:id", service.NewDeparment(svcCtx).Update)
+
+			// 菜单相关
+			system.GET("/menus", service.NewMenu(svcCtx).Tree)
+			system.GET("/menus/:id", service.NewMenu(svcCtx).Show)
+			system.POST("/menus", service.NewMenu(svcCtx).Add)
+			system.POST("/menus/:id", service.NewMenu(svcCtx).Update)
+
+			// 部门相关
+			system.GET("/departments", service.NewDeparment(svcCtx).Tree)
+			system.GET("/departments/:id", service.NewDeparment(svcCtx).Show)
+			system.POST("/departments", service.NewDeparment(svcCtx).Add)
+			system.POST("/departments/:id", service.NewDeparment(svcCtx).Update)
 		}
 	}
 

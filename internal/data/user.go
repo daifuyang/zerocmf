@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	cachePrefix = "cache:user:userId:"
+	userCachePrefix = "cache:user:userId:"
 )
 
 type UserRepo struct {
@@ -54,17 +54,17 @@ func (repo *UserRepo) FindUserByPhoneNumber(ctx context.Context, phoneNumber str
 }
 
 // FindUserByUserID implements biz.UserRepo.
-func (repo *UserRepo) FindUserByUserID(ctx context.Context, UserID uint64) (*biz.User, error) {
+func (repo *UserRepo) FindOne(ctx context.Context, UserID uint64) (*biz.User, error) {
 
-	user := &biz.User{}
-	key := fmt.Sprintf("%s%v", cachePrefix, UserID)
+	var user *biz.User
+	key := fmt.Sprintf("%s%v", userCachePrefix, UserID)
 
 	err := repo.data.RGet(ctx, user, key)
 	if err != redis.Nil {
 		return user, nil
 	}
 
-	tx := repo.data.db.Where("user_id = ?", UserID).First(user)
+	tx := repo.data.db.Where("user_id = ?", UserID).First(&user)
 	if tx.Error != nil {
 		return nil, tx.Error
 	}
@@ -86,7 +86,7 @@ func (repo *UserRepo) CreateUser(ctx context.Context, user *biz.User) error {
 		return tx.Error
 	}
 
-	key := fmt.Sprintf("%s%v", cachePrefix, user.UserID)
+	key := fmt.Sprintf("%s%v", userCachePrefix, user.UserID)
 	repo.data.RSet(ctx, key, user)
 	return nil
 }

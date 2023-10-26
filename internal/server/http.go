@@ -1,9 +1,8 @@
 package server
 
 import (
-	"fmt"
-	"time"
 	v1 "zerocmf/internal/server/api/v1"
+	"zerocmf/internal/server/middleware"
 	"zerocmf/internal/service"
 
 	"github.com/gin-gonic/gin"
@@ -21,21 +20,6 @@ func NewHTTPServer(srvCtx *service.Context) *Server {
 	service.NewMenu(srvCtx).ImportMenu()
 
 	r := gin.New()
-	r.Use(gin.LoggerWithFormatter(func(param gin.LogFormatterParams) string {
-		// your custom format
-		return fmt.Sprintf("%s - [%s] \"%s %s %s %d %s \"%s\" %s\"\n",
-			param.ClientIP,
-			param.TimeStamp.Format(time.RFC1123),
-			param.Method,
-			param.Path,
-			param.Request.Proto,
-			param.StatusCode,
-			param.Latency,
-			param.Request.UserAgent(),
-			param.ErrorMessage,
-		)
-	}))
-	r.Use(gin.Recovery())
 
 	return &Server{
 		Router: r,
@@ -44,5 +28,6 @@ func NewHTTPServer(srvCtx *service.Context) *Server {
 }
 
 func (s *Server) Start() {
+	middleware.NewMiddleware(s.Router, s.SrvCtx).UseMiddleware() // 初始化中间件
 	v1.RegisterHTTPServer(s.Router, s.SrvCtx)
 }
