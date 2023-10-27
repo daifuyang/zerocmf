@@ -3,6 +3,7 @@ package data
 import (
 	"context"
 	"fmt"
+	"time"
 	"zerocmf/internal/biz"
 
 	"github.com/go-redis/redis/v8"
@@ -16,14 +17,9 @@ var (
 	menuCachePrefix = "cache:user:userId:"
 )
 
-// Delete implements biz.MenuRepo.
-func (*MenuRepo) Delete(ctx context.Context, id int64) (*biz.SysMenu, error) {
-	panic("unimplemented")
-}
-
-// Find implements biz.MenuRepo.
+// 查询全部菜单
 func (repo *MenuRepo) Find(ctx context.Context) (menus []*biz.SysMenu, err error) {
-	tx := repo.data.db.Find(&menus)
+	tx := repo.data.db.Where("deleted_at is null").Find(&menus)
 	if tx.Error != nil {
 		err = tx.Error
 		return
@@ -31,7 +27,7 @@ func (repo *MenuRepo) Find(ctx context.Context) (menus []*biz.SysMenu, err error
 	return
 }
 
-// FindOne implements biz.MenuRepo.
+// 查询单个菜单
 func (repo *MenuRepo) FindOne(ctx context.Context, id int64) (*biz.SysMenu, error) {
 
 	var sysMenu *biz.SysMenu
@@ -42,7 +38,7 @@ func (repo *MenuRepo) FindOne(ctx context.Context, id int64) (*biz.SysMenu, erro
 		return sysMenu, nil
 	}
 
-	tx := repo.data.db.Where("menu_id = ? AND status = 1", id).First(&sysMenu)
+	tx := repo.data.db.Where("menu_id = ? AND deleted_at is null", id).First(&sysMenu)
 
 	if tx.Error != nil {
 		return nil, tx.Error
@@ -57,24 +53,33 @@ func (repo *MenuRepo) FindOne(ctx context.Context, id int64) (*biz.SysMenu, erro
 	return sysMenu, nil
 }
 
-// FindOneByMenuName implements biz.MenuRepo.
+// 根据名称查询单个菜单
 func (r *MenuRepo) FindOneByMenuName(ctx context.Context, menuName string) (*biz.SysMenu, error) {
 	var sysMenu *biz.SysMenu
-	err := r.data.db.Where("menu_name = ?", menuName).First(&sysMenu).Error
+	err := r.data.db.Where("menu_name = ? AND deleted_at is null", menuName).First(&sysMenu).Error
 	if err != nil {
 		return nil, err
 	}
 	return sysMenu, nil
 }
 
-// Update implements biz.MenuRepo.
+// 跟新单个菜单
 func (r *MenuRepo) Update(ctx context.Context, menu *biz.SysMenu) error {
+	// redis重置
+	r.data.rdb.Del(ctx, fmt.Sprintf("%s%v", menuCachePrefix, menu.MenuID))
 	return r.data.db.Save(&menu).Error
 }
 
+// 插入菜单
 func (r *MenuRepo) Insert(ctx context.Context, menu *biz.SysMenu) error {
 	tx := r.data.db.Create(&menu)
 	return tx.Error
+}
+
+// 删除单个菜单
+func (repo *MenuRepo) Delete(ctx context.Context, id int64) error {
+	repo.data.rdb.Del(ctx, fmt.Sprintf("%s%v", menuCachePrefix, id))
+	return repo.data.db.Model(&biz.SysMenu{}).Where("menu_id = ?", id).Update("deleted_at", time.Now()).Error
 }
 
 func NewMenuRepo(data *Data) biz.MenuRepo {

@@ -3,8 +3,10 @@ package service
 import (
 	"zerocmf/configs"
 	"zerocmf/internal/biz"
+	"zerocmf/pkg/casbinz"
 	zOauth "zerocmf/pkg/oauth2"
 
+	"github.com/casbin/casbin/v2"
 	"github.com/go-oauth2/oauth2/v4/server"
 	"github.com/google/wire"
 	"go.uber.org/zap"
@@ -18,6 +20,7 @@ var ProviderSet = wire.NewSet(NewContext)
 type Context struct {
 	Config      *configs.Config
 	Logger      *zap.Logger
+	e           *casbin.Enforcer
 	uc          *biz.Userusecase
 	smsc        *biz.Smsusecase
 	dc          *biz.Depatmentusecase
@@ -35,11 +38,14 @@ func NewContext(config *configs.Config, uc *biz.Userusecase, smsc *biz.Smsusecas
 		panic(err)
 	}
 
+	e := casbinz.NewAdapter(config)
+
 	// 初始化短信
 	return &Context{
 		Config:      config,
 		Logger:      logger,
 		uc:          uc,
+		e:           e,
 		smsc:        smsc,
 		dc:          dc,
 		mc:          mc,

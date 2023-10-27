@@ -39,6 +39,7 @@ func RegisterHTTPServer(router *gin.Engine, svcCtx *service.Context) {
 			})
 		}
 
+		// 系统相关
 		system := v1.Group("/system")
 		{
 			system.Use(svcCtx.AuthMiddleware)
@@ -48,6 +49,14 @@ func RegisterHTTPServer(router *gin.Engine, svcCtx *service.Context) {
 			system.GET("/menus/:id", service.NewMenu(svcCtx).Show)
 			system.POST("/menus", service.NewMenu(svcCtx).Add)
 			system.POST("/menus/:id", service.NewMenu(svcCtx).Update)
+			system.DELETE("/menus/:id", service.NewMenu(svcCtx).Delete)
+
+			// 角色相关
+			system.GET("/roles", service.NewRole(svcCtx).List)
+			system.GET("/roles/:id", service.NewRole(svcCtx).Show)
+			system.POST("/roles", service.NewRole(svcCtx).Add)
+			system.POST("/roles/:id", service.NewRole(svcCtx).Update)
+			system.DELETE("/roles/:id", service.NewRole(svcCtx).Delete)
 
 			// 部门相关
 			system.GET("/departments", service.NewDeparment(svcCtx).Tree)

@@ -6,10 +6,12 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strconv"
 	"zerocmf/internal/biz"
 	"zerocmf/pkg/response"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/copier"
 	"gorm.io/gorm"
 )
 
@@ -131,40 +133,116 @@ func (s *menu) Tree(c *gin.Context) {
 
 // 添加一条菜单
 func (s *menu) Add(c *gin.Context) {
-	var req biz.SysMenu
+	s.Save(c)
+}
+
+// 查看一条菜单
+func (s *menu) Show(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		response.Error(c, err)
+		return
+	}
+	menu, err := s.mc.FindOne(c.Request.Context(), id)
+	if err != nil {
+		response.Error(c, err)
+		return
+	}
+	response.Success(c, "获取成功！", menu)
+}
+
+// 更新一条菜单
+func (s *menu) Update(c *gin.Context) {
+	s.Save(c)
+}
+
+// 新增和跟新统一逻辑
+func (s *menu) Save(c *gin.Context) {
+	id := c.Param("id")
+	var req struct {
+		MenuName string  `json:"menuName" binding:"required"`
+		ParentID *int64  `json:"parentId"`
+		OrderNum *int    `json:"orderNum"`
+		Path     *string `json:"path"`
+		IsFrame  *int    `json:"isFrame"`
+		MenuType *int    `json:"menuType"`
+		Visible  *string `json:"visible"`
+		Status   *int    `json:"status"`
+		Perms    *string `json:"perms"`
+		Icon     *string `json:"icon"`
+		Remark   *string `json:"remark"`
+	}
+
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.Error(c, err)
 		return
 	}
 
-	err := s.mc.Insert(c.Request.Context(), &req)
-	if err != nil {
-		response.Error(c, err)
-		return
+	var saveData biz.SysMenu
+
+	msg := "添加成功！"
+
+	if id == "" {
+		err := copier.Copy(&saveData, &req)
+		if err != nil {
+			response.Error(c, err)
+			return
+		}
+
+		err = s.mc.Insert(c.Request.Context(), &saveData)
+		if err != nil {
+			response.Error(c, err)
+			return
+		}
+	} else {
+		idInt, err := strconv.ParseInt(c.Param("id"), 10, 64)
+		if err != nil {
+			response.Error(c, err)
+			return
+		}
+		menu, err := s.mc.FindOne(c.Request.Context(), idInt)
+		if err != nil {
+			response.Error(c, err)
+			return
+		}
+
+		err = copier.Copy(&menu, &req)
+		if err != nil {
+			response.Error(c, err)
+			return
+		}
+
+		saveData = *menu
+
+		err = s.mc.Update(c.Request.Context(), &saveData)
+		if err != nil {
+			response.Error(c, err)
+			return
+		}
+
+		msg = "修改成功！"
+
 	}
 
-	response.Success(c, "添加成功！", req)
-
-}
-
-// 查看一条菜单
-func (s *menu) Show(c *gin.Context) {
-
-}
-
-// 更新一条菜单
-func (s *menu) Update(c *gin.Context) {
-
-}
-
-// 新增和跟新统一逻辑
-func (s *menu) Save(c *gin.Context) {
-
+	response.Success(c, msg, saveData)
 }
 
 // 删除一条菜单
 func (s *menu) Delete(c *gin.Context) {
 
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		response.Error(c, err)
+		return
+	}
+
+	sysMenu, err := s.mc.Delete(c.Request.Context(), id)
+	if err != nil {
+		response.Error(c, err)
+		return
+	}
+
+	response.Success(c, "删除成功！", sysMenu)
 }
 
 // 批量删除菜单

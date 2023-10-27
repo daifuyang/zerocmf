@@ -55,6 +55,9 @@ func Error(c *gin.Context, msg interface{}) {
 		if errors.Is(err, ErrBind) {
 			code = http.StatusNotFound
 		}
+
+		res.Data = err.Error()
+
 	}
 	c.JSON(code, res)
 	c.Abort()
