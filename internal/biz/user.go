@@ -13,6 +13,7 @@ type User struct {
 	DeptID      *uint64   `gorm:"index;comment:部门ID;size:20;type:bigint(20)" json:"deptId"`
 	LoginName   string    `gorm:"comment:登录账号;size:30;type:varchar(30)" json:"loginName"`
 	UserName    string    `gorm:"comment:用户昵称;size:30;type:varchar(30)" json:"userName"`
+	ListOrder   int       `gorm:"column:list_order;default:0;comment:显示顺序" json:"listOrder"`
 	UserType    uint      `gorm:"default:1;comment:用户类型（0:系统用户 1:注册用户）;size:2;type:tinyint(2)" json:"userType"`
 	Email       string    `gorm:"default:null;comment:用户邮箱;size:50;type:varchar(50)" json:"email"`
 	PhoneNumber string    `gorm:"default:null;comment:手机号码;size:11;type:varchar(11)" json:"phoneNumber"`

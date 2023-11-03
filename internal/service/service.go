@@ -24,12 +24,13 @@ type Context struct {
 	uc          *biz.Userusecase
 	smsc        *biz.Smsusecase
 	dc          *biz.Depatmentusecase
+	rc          *biz.Roleusecase
 	mc          *biz.Menusecase
 	srv         *server.Server
 	oauthConfig oauth2.Config
 }
 
-func NewContext(config *configs.Config, uc *biz.Userusecase, smsc *biz.Smsusecase, dc *biz.Depatmentusecase, mc *biz.Menusecase) *Context {
+func NewContext(config *configs.Config, uc *biz.Userusecase, smsc *biz.Smsusecase, dc *biz.Depatmentusecase, mc *biz.Menusecase, rc *biz.Roleusecase) *Context {
 
 	oauthConfig, srv := zOauth.NewServer(config)
 
@@ -49,6 +50,7 @@ func NewContext(config *configs.Config, uc *biz.Userusecase, smsc *biz.Smsusecas
 		smsc:        smsc,
 		dc:          dc,
 		mc:          mc,
+		rc:          rc,
 		srv:         srv,
 		oauthConfig: oauthConfig,
 	}

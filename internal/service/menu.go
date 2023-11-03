@@ -47,7 +47,6 @@ func (s *menu) ImportMenu() {
 	if err != nil {
 		panic("无法获取当前工作目录!")
 	}
-
 	mustLoad(currentDir+"/static/menu.json", &menu)
 
 	var parentId int64 = 0
@@ -74,20 +73,20 @@ func (s *menu) recursionImportMenu(ctx context.Context, menu []*biz.SysMenu, par
 		}
 
 		localOne := &biz.SysMenu{
-			MenuName: v.MenuName,
-			ParentID: parentId,
-			Path:     v.Path,
-			OrderNum: k + 1,
-			MenuType: v.MenuType,
-			Perms:    newPerms,
-			CreateId: 1,
+			MenuName:  v.MenuName,
+			ParentID:  parentId,
+			Path:      v.Path,
+			ListOrder: k + 1,
+			MenuType:  v.MenuType,
+			Perms:     newPerms,
+			CreateId:  1,
 		}
 
 		// 只能一条一条的插入
 		if one != nil {
 			localOne.MenuID = one.MenuID
 			localOne.Status = one.Status
-			localOne.OrderNum = one.OrderNum
+			localOne.ListOrder = one.ListOrder
 			localOne.Visible = one.Visible
 			localOne.Icon = one.Icon
 			localOne.CreatedAt = one.CreatedAt

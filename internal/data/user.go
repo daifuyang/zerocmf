@@ -12,15 +12,15 @@ import (
 )
 
 var (
-	userCachePrefix = "cache:user:userId:"
+	userCachePrefix = "cache:user:id:"
 )
 
-type UserRepo struct {
+type userRepo struct {
 	data *Data
 }
 
 // FindUserByAccount implements biz.UserRepo.
-func (repo *UserRepo) FindUserByAccount(ctx context.Context, account string) (*biz.User, error) {
+func (repo *userRepo) FindUserByAccount(ctx context.Context, account string) (*biz.User, error) {
 	user := &biz.User{}
 	query := "login_name = ?"
 	queryArgs := []interface{}{account}
@@ -41,7 +41,7 @@ func (repo *UserRepo) FindUserByAccount(ctx context.Context, account string) (*b
 }
 
 // FindUserByPhoneNumber implements biz.UserRepo.
-func (repo *UserRepo) FindUserByPhoneNumber(ctx context.Context, phoneNumber string) (*biz.User, error) {
+func (repo *userRepo) FindUserByPhoneNumber(ctx context.Context, phoneNumber string) (*biz.User, error) {
 	user := &biz.User{}
 	tx := repo.data.db.Where("phone_number = ?", phoneNumber).First(user)
 	if tx.Error != nil {
@@ -54,7 +54,7 @@ func (repo *UserRepo) FindUserByPhoneNumber(ctx context.Context, phoneNumber str
 }
 
 // FindUserByUserID implements biz.UserRepo.
-func (repo *UserRepo) FindOne(ctx context.Context, UserID uint64) (*biz.User, error) {
+func (repo *userRepo) FindOne(ctx context.Context, UserID uint64) (*biz.User, error) {
 
 	var user *biz.User
 	key := fmt.Sprintf("%s%v", userCachePrefix, UserID)
@@ -80,7 +80,7 @@ func (repo *UserRepo) FindOne(ctx context.Context, UserID uint64) (*biz.User, er
 }
 
 // CreateUser implements biz.UserRepo.
-func (repo *UserRepo) CreateUser(ctx context.Context, user *biz.User) error {
+func (repo *userRepo) CreateUser(ctx context.Context, user *biz.User) error {
 	tx := repo.data.db.Create(&user)
 	if tx.Error != nil {
 		return tx.Error
@@ -92,7 +92,7 @@ func (repo *UserRepo) CreateUser(ctx context.Context, user *biz.User) error {
 }
 
 func NewUserRepo(data *Data) biz.UserRepo {
-	return &UserRepo{
+	return &userRepo{
 		data: data,
 	}
 }

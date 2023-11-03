@@ -24,5 +24,10 @@ func AutoMigrate(db *gorm.DB, config *configs.Config) error {
 		return err
 	}
 
+	err = new(SysRole).AutoMigrate(db)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

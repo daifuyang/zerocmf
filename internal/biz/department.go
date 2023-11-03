@@ -13,7 +13,7 @@ type SysDept struct {
 	ParentID  int64     `gorm:"type:bigint;default:0;comment:'父部门id'" json:"parentId"`
 	Ancestors string    `gorm:"type:varchar(50);default:'';comment:'祖级列表'" json:"ancestors"`
 	DeptName  string    `gorm:"type:varchar(30);default:'';comment:'部门名称'" json:"deptName"`
-	OrderNum  int       `gorm:"type:int(4);default:0;comment:'显示顺序'" json:"orderNum"`
+	ListOrder int       `gorm:"column:list_order;default:0;comment:显示顺序" json:"listOrder"`
 	Leader    string    `gorm:"type:varchar(20);default:null;comment:'负责人'" json:"leader"`
 	Phone     string    `gorm:"type:varchar(11);default:null;comment:'联系电话'" json:"phone"`
 	Email     string    `gorm:"type:varchar(50);default:null;comment:'邮箱'" json:"email"`

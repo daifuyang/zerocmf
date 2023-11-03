@@ -11,6 +11,10 @@
             "mode": "auto",
             "program": "${workspaceFolder}/cmd/server",
             "args": ["-f", "${workspaceFolder}/configs/config.yaml"],
+            "env": {},
+            "showLog": true,
+            "trace": "verbose",
+            "cwd": "${workspaceFolder}" // 设置 Debug 运行目录为项目根目录
         }
     ]
 }

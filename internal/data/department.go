@@ -5,12 +5,12 @@ import (
 	"zerocmf/internal/biz"
 )
 
-type DepartmentRepo struct {
+type departmentRepo struct {
 	data *Data
 }
 
-// GetOneById implements biz.DepartmentRepo.
-func (repo *DepartmentRepo) GetOneById(ctx context.Context, id int64) (*biz.SysDept, error) {
+// GetOneById implements biz.departmentRepo.
+func (repo *departmentRepo) GetOneById(ctx context.Context, id int64) (*biz.SysDept, error) {
 	dept := &biz.SysDept{
 		DeptID: id,
 	}
@@ -21,20 +21,20 @@ func (repo *DepartmentRepo) GetOneById(ctx context.Context, id int64) (*biz.SysD
 	return dept, nil
 }
 
-// Add implements biz.DepartmentRepo.
-func (repo *DepartmentRepo) Add(ctx context.Context, sysDept *biz.SysDept) error {
+// Add implements biz.departmentRepo.
+func (repo *departmentRepo) Add(ctx context.Context, sysDept *biz.SysDept) error {
 	tx := repo.data.db.Create(&sysDept)
 	return tx.Error
 }
 
-// update implements biz.DepartmentRepo.
-func (repo *DepartmentRepo) Update(ctx context.Context, sysDept *biz.SysDept) error {
+// update implements biz.departmentRepo.
+func (repo *departmentRepo) Update(ctx context.Context, sysDept *biz.SysDept) error {
 	tx := repo.data.db.Where("dept_id", sysDept.DeptID).Save(&sysDept)
 	return tx.Error
 }
 
 // 查询全部部门列表
-func (repo *DepartmentRepo) Index(ctx context.Context) ([]*biz.SysDept, error) {
+func (repo *departmentRepo) Index(ctx context.Context) ([]*biz.SysDept, error) {
 	sysDept := []*biz.SysDept{}
 	tx := repo.data.db.Find(&sysDept)
 	if tx.Error != nil {
@@ -44,7 +44,7 @@ func (repo *DepartmentRepo) Index(ctx context.Context) ([]*biz.SysDept, error) {
 }
 
 func NewDeparmentRepo(data *Data) biz.DepartmentRepo {
-	return &DepartmentRepo{
+	return &departmentRepo{
 		data: data,
 	}
 }

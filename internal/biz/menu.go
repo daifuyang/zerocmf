@@ -11,7 +11,7 @@ type SysMenu struct {
 	MenuID    int64      `gorm:"column:menu_id;primaryKey;comment:菜单ID" json:"menuId"`
 	MenuName  string     `gorm:"column:menu_name;not null;comment:菜单名称" json:"menuName" binding:"required"`
 	ParentID  int64      `gorm:"column:parent_id;default:0;comment:父菜单ID" json:"parentId"`
-	ListOrder float64    `gorm:"column:list_order;default:10000;comment:显示顺序" json:"listOrder"` // 修改字段名
+	ListOrder int        `gorm:"column:list_order;default:0;comment:显示顺序" json:"listOrder"` // 排序字段名
 	Path      string     `gorm:"column:path;default:'';comment:路由地址" json:"path"`
 	IsFrame   int        `gorm:"column:is_frame;default:0;comment:是否为外链（0：否 1：是）" json:"isFrame"`
 	MenuType  int        `gorm:"column:menu_type;default:0;comment:菜单类型（0目录 1菜单 2按钮）" json:"menuType"`
