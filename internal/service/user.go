@@ -1,7 +1,6 @@
 package service
 
 import (
-	"strconv"
 	"strings"
 	"zerocmf/internal/biz"
 	"zerocmf/internal/utils"
@@ -11,8 +10,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
-
-	"github.com/go-oauth2/oauth2/v4/server"
 )
 
 // 用户注册
@@ -150,9 +147,6 @@ func (s *Context) SendRegisterCode(c *gin.Context) {
 // 用户登录
 func (s *Context) Login(c *gin.Context) {
 
-	oauthConfig := s.oauthConfig
-	srv := s.srv
-
 	ctx := c.Request.Context()
 
 	var req biz.Login
@@ -187,26 +181,9 @@ func (s *Context) Login(c *gin.Context) {
 		return
 	}
 
-	authorizeRequest := &server.AuthorizeRequest{
-		ResponseType: "code",
-		ClientID:     oauthConfig.ClientID,
-		RedirectURI:  oauthConfig.RedirectURL,
-		Scope:        "all",
-		UserID:       strconv.FormatInt(int64(user.UserID), 10),
-		// 其他参数根据需求设置
-	}
-
-	// 调用 GetAuthorizeToken 方法处理授权请求
-	tokenInfo, err := srv.GetAuthorizeToken(ctx, authorizeRequest)
+	token, err := s.uc.Token(ctx, user)
 	if err != nil {
-		response.Error(c, "登录失败！")
-		return
-	}
-
-	code := tokenInfo.GetCode()
-	token, err := oauthConfig.Exchange(ctx, code)
-	if err != nil {
-		response.Error(c, "获取失败：")
+		response.Error(c, err)
 		return
 	}
 
@@ -215,7 +192,7 @@ func (s *Context) Login(c *gin.Context) {
 
 // 校验用户信息
 func (s *Context) AuthMiddleware(c *gin.Context) {
-	token, err := s.srv.ValidationBearerToken(c.Request)
+	token, err := s.uc.ValidationBearerToken(c.Request)
 	if err != nil {
 		response.Error(c, response.ErrAuth)
 		return

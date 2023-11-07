@@ -30,3 +30,14 @@ Sms:
   SignName: 码上云
   TemplateCode: SMS_203678233
   ExpiresTime: 3
+
+# oauth2配置
+Oauth2:
+  ClientID: zerocmf
+  ClientSecret: zerocmf2023.
+  Scopes:
+    - all
+  AuthServerURL: http://localhost:8080
+  RedirectURL: http://localhost:8080/oauth2/callback
+  AuthURL: http://localhost:8080/oauth2/authorize
+  TokenURL: http://localhost:8080/oauth2/token

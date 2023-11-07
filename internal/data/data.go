@@ -8,12 +8,17 @@ import (
 	"time"
 	"zerocmf/configs"
 	"zerocmf/internal/biz"
+	cmfOauth2 "zerocmf/pkg/oauth2"
 
+	"github.com/go-oauth2/oauth2/v4/server"
+	"golang.org/x/oauth2"
+
+	"github.com/go-oauth2/mysql/v4"
 	"github.com/go-redis/redis/extra/redisotel"
 	"github.com/go-redis/redis/v8"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/google/wire"
-	"gorm.io/driver/mysql"
+	gormMysql "gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
 
@@ -21,9 +26,11 @@ import (
 var ProviderSet = wire.NewSet(NewData, NewUserRepo, NewSmsRepo, NewDeparmentRepo, NewMenuRepo, NewRoleRepo)
 
 type Data struct {
-	db     *gorm.DB
-	rdb    *redis.Client
-	config *configs.Config
+	db         *gorm.DB
+	rdb        *redis.Client
+	srv        *server.Server
+	config     *configs.Config
+	oauth2Conf oauth2.Config
 }
 
 func NewData(config *configs.Config) (*Data, func(), error) {
@@ -38,10 +45,28 @@ func NewData(config *configs.Config) (*Data, func(), error) {
 		panic(sqlErr)
 	}
 
-	db, err := gorm.Open(mysql.Open(config.Mysql.Dsn(true)), &gorm.Config{})
+	db, err := gorm.Open(gormMysql.Open(config.Mysql.Dsn(true)), &gorm.Config{})
 	if err != nil {
 		panic(err)
 	}
+
+	// use mysql token store
+	tokenStore := mysql.NewDefaultStore(
+		mysql.NewConfig(config.Mysql.Dsn(true)),
+	)
+
+	oauth2Conf := oauth2.Config{
+		ClientID:     config.Oauth2.ClientID,
+		ClientSecret: config.Oauth2.ClientSecret,
+		Scopes:       config.Oauth2.Scopes,
+		RedirectURL:  config.Oauth2.RedirectURL,
+		Endpoint: oauth2.Endpoint{
+			AuthURL:  config.Oauth2.AuthURL,
+			TokenURL: config.Oauth2.TokenURL,
+		},
+	}
+
+	srv := cmfOauth2.NewServer(config, tokenStore)
 
 	err = biz.AutoMigrate(db, config)
 	if err != nil {
@@ -70,15 +95,16 @@ func NewData(config *configs.Config) (*Data, func(), error) {
 	rdb.AddHook(redisotel.TracingHook{})
 
 	d := &Data{
-		db:     db,
-		rdb:    rdb,
-		config: config,
+		db:         db,
+		rdb:        rdb,
+		config:     config,
+		srv:        srv,
+		oauth2Conf: oauth2Conf,
 	}
 
 	return d, func() {
-		if err := d.rdb.Close(); err != nil {
-
-		}
+		tokenStore.Close()
+		d.rdb.Close()
 	}, nil
 }
 

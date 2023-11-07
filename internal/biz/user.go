@@ -2,9 +2,12 @@ package biz
 
 import (
 	"context"
+	"net/http"
 	"time"
 	"zerocmf/pkg/hashed"
 
+	v4Oauth2 "github.com/go-oauth2/oauth2/v4"
+	"golang.org/x/oauth2"
 	"gorm.io/gorm"
 )
 
@@ -61,6 +64,8 @@ func (biz *User) AutoMigrate(db *gorm.DB, salt string) error {
 // 定义data层接口
 type UserRepo interface {
 	FindOne(ctx context.Context, id uint64) (*User, error)
+	Token(ctx context.Context, user *User) (*oauth2.Token, error)        // 获取token
+	ValidationBearerToken(req *http.Request) (v4Oauth2.TokenInfo, error) //验证token
 	CreateUser(ctx context.Context, user *User) error
 	FindUserByAccount(ctx context.Context, account string) (*User, error)
 	FindUserByPhoneNumber(ctx context.Context, phoneNumber string) (*User, error)
@@ -93,6 +98,18 @@ type Login struct {
 }
 
 // 业务方组装层，调用repo数据层
+
+// 登录
+func (uc *Userusecase) Token(ctx context.Context, user *User) (*oauth2.Token, error) {
+	return uc.repo.Token(ctx, user)
+}
+
+// 验证token
+func (uc *Userusecase) ValidationBearerToken(req *http.Request) (v4Oauth2.TokenInfo, error) {
+	return uc.repo.ValidationBearerToken(req)
+}
+
+// 注册
 func (uc *Userusecase) Register(ctx context.Context, user *User) error {
 	return uc.repo.CreateUser(ctx, user)
 }

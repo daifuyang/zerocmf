@@ -1,16 +1,19 @@
 package configs
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // Config 结构体用于映射配置文件中的数据
 type Config struct {
-	Name  string      `yaml:"Name"`
-	Host  string      `yaml:"Host"`
-	Port  int         `yaml:"Port"`
-	Debug bool        `yaml:"Debug"`
-	Mysql MysqlConfig `yaml:"Mysql"`
-	Redis RedisConfig `yaml:"Redis"`
-	Sms   SmsConfig   `yaml:"Sms"`
+	Name   string       `yaml:"Name"`
+	Host   string       `yaml:"Host"`
+	Port   int          `yaml:"Port"`
+	Debug  bool         `yaml:"Debug"`
+	Mysql  MysqlConfig  `yaml:"Mysql"`
+	Redis  RedisConfig  `yaml:"Redis"`
+	Sms    SmsConfig    `yaml:"Sms"`
+	Oauth2 OAuth2Config `yaml:"Oauth2"`
 }
 
 // MysqlConfig 结构体用于映射MySQL配置
@@ -64,4 +67,14 @@ type SmsConfig struct {
 	SignName        string `yaml:"SignName"`
 	TemplateCode    string `yaml:"TemplateCode"`
 	ExpiresTime     int64  `yaml:"ExpiresTime"`
+}
+
+type OAuth2Config struct {
+	ClientID      string   `yaml:"ClientID"`
+	ClientSecret  string   `yaml:"ClientSecret"`
+	Scopes        []string `yaml:"Scopes"`
+	AuthServerURL string   `yaml:"authServerURL"`
+	RedirectURL   string   `yaml:"RedirectURL"`
+	AuthURL       string   `yaml:"AuthURL"`
+	TokenURL      string   `yaml:"TokenURL"`
 }

@@ -12,46 +12,27 @@ import (
 	"github.com/go-oauth2/oauth2/v4/store"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/golang-jwt/jwt"
-	"golang.org/x/oauth2"
 )
 
-func NewServer(config *configs.Config) (oauth2.Config, *server.Server) {
+func NewServer(config *configs.Config, tokenStore *mysql.Store) *server.Server {
 
-	authServerURL := "http://localhost:8080"
-
-	oauthConfig := oauth2.Config{
-		ClientID:     "222222",
-		ClientSecret: "22222222",
-		Scopes:       []string{"all"},
-		RedirectURL:  authServerURL + "/oauth2/callback",
-		Endpoint: oauth2.Endpoint{
-			AuthURL:  authServerURL + "/oauth2/authorize",
-			TokenURL: authServerURL + "/oauth2/token",
-		},
-	}
+	oauth2Conf := config.Oauth2
 
 	manager := manage.NewDefaultManager()
 	manager.SetAuthorizeCodeTokenCfg(manage.DefaultAuthorizeCodeTokenCfg)
-
-	// use mysql token store
-	tokenStore := mysql.NewDefaultStore(
-		mysql.NewConfig(config.Mysql.Dsn(true)),
-	)
-
-	defer tokenStore.Close()
 
 	// token store
 	manager.MapTokenStorage(tokenStore)
 
 	// client store
-	clientID := oauthConfig.ClientID
-	ClientSecret := oauthConfig.ClientSecret
+	clientID := oauth2Conf.ClientID
+	ClientSecret := oauth2Conf.ClientSecret
 
 	clientStore := store.NewClientStore()
 	clientStore.Set(clientID, &models.Client{
 		ID:     clientID,
 		Secret: ClientSecret,
-		Domain: authServerURL,
+		Domain: oauth2Conf.AuthServerURL,
 	})
 
 	manager.MapClientStorage(clientStore)
@@ -63,5 +44,5 @@ func NewServer(config *configs.Config) (oauth2.Config, *server.Server) {
 	ginserver.SetAllowGetAccessRequest(true)
 	// ginserver.SetClientInfoHandler(server.ClientFormHandler)
 
-	return oauthConfig, srv
+	return srv
 }

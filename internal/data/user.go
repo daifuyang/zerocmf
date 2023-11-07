@@ -4,10 +4,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
+	"strconv"
 	"zerocmf/internal/biz"
 	"zerocmf/internal/utils"
 
+	v4Oauth2 "github.com/go-oauth2/oauth2/v4"
+	v4Server "github.com/go-oauth2/oauth2/v4/server"
 	"github.com/go-redis/redis/v8"
+	"golang.org/x/oauth2"
 	"gorm.io/gorm"
 )
 
@@ -17,6 +22,43 @@ var (
 
 type userRepo struct {
 	data *Data
+}
+
+// 验证token
+func (repo *userRepo) ValidationBearerToken(req *http.Request) (v4Oauth2.TokenInfo, error) {
+	srv := repo.data.srv
+	return srv.ValidationBearerToken(req)
+}
+
+// 获取token
+func (repo *userRepo) Token(ctx context.Context, user *biz.User) (*oauth2.Token, error) {
+
+	config := repo.data.config.Oauth2
+
+	srv := repo.data.srv
+	oauth2Conf := repo.data.oauth2Conf
+
+	authorizeRequest := &v4Server.AuthorizeRequest{
+		ResponseType: "code",
+		ClientID:     config.ClientID,
+		RedirectURI:  config.RedirectURL,
+		Scope:        "all",
+		UserID:       strconv.FormatInt(int64(user.UserID), 10),
+		// 其他参数根据需求设置
+	}
+
+	// 调用 GetAuthorizeToken 方法处理授权请求
+	tokenInfo, err := srv.GetAuthorizeToken(ctx, authorizeRequest)
+	if err != nil {
+		return nil, err
+	}
+
+	code := tokenInfo.GetCode()
+	token, err := oauth2Conf.Exchange(ctx, code)
+	if err != nil {
+		return nil, err
+	}
+	return token, nil
 }
 
 // FindUserByAccount implements biz.UserRepo.
