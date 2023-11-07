@@ -23,7 +23,7 @@ func NewAdapter(configs *configs.Config) (e *casbin.Enforcer) {
 
 	e, err = casbin.NewEnforcer(currentDir+"/static/rbac_model.conf", a)
 	if err != nil {
-		panic(err)
+		panic(" casbin NewEnforce" + err.Error())
 	}
 
 	e.LoadPolicy()
