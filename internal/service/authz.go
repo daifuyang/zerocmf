@@ -1,7 +1,6 @@
 package service
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 	"zerocmf/pkg/response"
@@ -44,6 +43,16 @@ func (s *authz) Index(c *gin.Context) {
 	response.Success(c, "获取成功！", access)
 }
 
+// 辅助函数：检查切片中是否包含某个值
+func contains(arr []string, val string) bool {
+	for _, item := range arr {
+		if item == val {
+			return true
+		}
+	}
+	return false
+}
+
 // 保存角色权限
 func (s *authz) Save(c *gin.Context) {
 	roleId := c.Param("id")
@@ -67,7 +76,6 @@ func (s *authz) Save(c *gin.Context) {
 	}
 
 	// 获取提交的权限列表
-
 	var req struct {
 		Access []string `json:"access"`
 	}
@@ -77,20 +85,40 @@ func (s *authz) Save(c *gin.Context) {
 		return
 	}
 
+	// 传入的新规则
+	newAccess := req.Access
+
 	//获取原来的数据
-	originalStrings := s.e.GetPermissionsForUser(roleId)
-	for _, p := range originalStrings {
-		fmt.Println("ppp", p[1])
+	existAccess := make([]string, 0)
+	permissions := s.e.GetPermissionsForUser(roleId)
+	for _, permission := range permissions {
+		existAccess = append(existAccess, permission[1])
 	}
 
-	// 将原始字符串数组转换为 map 以便快速查找
-	// originalMap := make(map[string]struct{})
-	// for _, s := range originalStrings {
-	// 	originalMap[s] = struct{}{}
-	// }
+	// 如果不存在，则全部添加（首次添加）
+	if len(existAccess) == 0 {
+		for _, access := range newAccess {
+			s.e.AddPermissionForUser(roleId, access)
+		}
+	} else if len(newAccess) == 0 {
+		// 清空
+		for _, access := range existAccess {
+			s.e.DeletePermissionForUser(roleId, access)
+		}
+	} else {
+		// 先找出需要删除的值
+		for _, exist := range existAccess {
+			if !contains(newAccess, exist) {
+				s.e.DeletePermissionForUser(roleId, exist)
+			}
+		}
 
-	for i := 0; i < len(req.Access); i++ {
-		s.e.AddPermissionForUser(roleId, req.Access[i])
+		// 再找出需要添加的值
+		for _, new := range newAccess {
+			if !contains(existAccess, new) {
+				s.e.AddPermissionForUser(roleId, new)
+			}
+		}
 	}
 
 	response.Success(c, "操作成功！", req)
