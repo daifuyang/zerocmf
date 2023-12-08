@@ -34,9 +34,14 @@ func RegisterHTTPServer(router *gin.Engine, svcCtx *service.Context) {
 			// 验证用户身份信息
 
 			user.Use(svcCtx.AuthMiddleware)
-			user.GET("/current_user", func(ctx *gin.Context) {
+			user.GET("/current_user", svcCtx.CurrentUser)
 
-			})
+			// 角色相关
+			user.GET("/roles", service.NewRole(svcCtx).List)
+			user.GET("/roles/:id", service.NewRole(svcCtx).Show)
+			user.POST("/roles", service.NewRole(svcCtx).Add)
+			user.POST("/roles/:id", service.NewRole(svcCtx).Update)
+			user.DELETE("/roles/:id", service.NewRole(svcCtx).Delete)
 		}
 
 		// 系统相关
@@ -51,13 +56,6 @@ func RegisterHTTPServer(router *gin.Engine, svcCtx *service.Context) {
 			system.POST("/menus/:id", service.NewMenu(svcCtx).Update)
 			system.DELETE("/menus/:id", service.NewMenu(svcCtx).Delete)
 
-			// 角色相关
-			system.GET("/roles", service.NewRole(svcCtx).List)
-			system.GET("/roles/:id", service.NewRole(svcCtx).Show)
-			system.POST("/roles", service.NewRole(svcCtx).Add)
-			system.POST("/roles/:id", service.NewRole(svcCtx).Update)
-			system.DELETE("/roles/:id", service.NewRole(svcCtx).Delete)
-
 			// 部门相关
 			system.GET("/departments", service.NewDeparment(svcCtx).Tree)
 			system.GET("/departments/:id", service.NewDeparment(svcCtx).Show)
@@ -67,6 +65,9 @@ func RegisterHTTPServer(router *gin.Engine, svcCtx *service.Context) {
 			// 权限相关
 			system.GET("/permissions/:id", service.NewAuthz(svcCtx).Index)
 			system.POST("/permissions/:id", service.NewAuthz(svcCtx).Save)
+
+			// 系统监控
+			system.GET("/monitor/server", service.NewMonitor(svcCtx).Index)
 		}
 	}
 

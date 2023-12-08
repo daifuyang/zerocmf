@@ -35,6 +35,9 @@ func (biz *SysDept) AutoMigrate(db *gorm.DB) error {
 	if err != nil {
 		return err
 	}
+
+	db.Where("")
+
 	return nil
 }
 

@@ -22,7 +22,7 @@ type User struct {
 	PhoneNumber string    `gorm:"default:null;comment:手机号码;size:11;type:varchar(11)" json:"phoneNumber"`
 	Sex         uint      `gorm:"default:0;comment:用户性别（0男 1女 2未知）;size:2;type:tinyint(2)" json:"sex"`
 	Avatar      string    `gorm:"comment:头像路径;size:100;type:varchar(100)" json:"avatar"`
-	Password    string    `gorm:"not null;comment:密码;size:100;type:varchar(100)" json:"password"`
+	Password    string    `gorm:"not null;comment:密码;size:100;type:varchar(100)" json:"-"`
 	Salt        string    `gorm:"comment:盐加密;size:20;type:varchar(20)" json:"salt"`
 	Status      uint      `gorm:"default:1;comment:帐号状态（0：停用 ,1：启用）;size:2;type:tinyint(2)" json:"status"`
 	LoginIP     string    `gorm:"default:'';comment:最后登录IP;size:128;type:varchar(128)" json:"loginIP"`
@@ -63,7 +63,7 @@ func (biz *User) AutoMigrate(db *gorm.DB, salt string) error {
 
 // 定义data层接口
 type UserRepo interface {
-	FindOne(ctx context.Context, id uint64) (*User, error)
+	FindOne(ctx context.Context, id int64) (*User, error)
 	Token(ctx context.Context, user *User) (*oauth2.Token, error)        // 获取token
 	ValidationBearerToken(req *http.Request) (v4Oauth2.TokenInfo, error) //验证token
 	CreateUser(ctx context.Context, user *User) error
@@ -115,7 +115,7 @@ func (uc *Userusecase) Register(ctx context.Context, user *User) error {
 }
 
 // 根据id查询单个用户
-func (uc *Userusecase) FindUserByUserID(ctx context.Context, userID uint64) (*User, error) {
+func (uc *Userusecase) FindUserByUserID(ctx context.Context, userID int64) (*User, error) {
 	return uc.repo.FindOne(ctx, userID)
 }
 

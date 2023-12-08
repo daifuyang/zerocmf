@@ -96,12 +96,12 @@ func (repo *userRepo) FindUserByPhoneNumber(ctx context.Context, phoneNumber str
 }
 
 // FindUserByUserID implements biz.UserRepo.
-func (repo *userRepo) FindOne(ctx context.Context, UserID uint64) (*biz.User, error) {
+func (repo *userRepo) FindOne(ctx context.Context, UserID int64) (*biz.User, error) {
 
 	var user *biz.User
 	key := fmt.Sprintf("%s%v", userCachePrefix, UserID)
 
-	err := repo.data.RGet(ctx, user, key)
+	err := repo.data.RGet(ctx, &user, key)
 	if err != redis.Nil {
 		return user, nil
 	}

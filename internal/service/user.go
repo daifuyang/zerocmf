@@ -1,6 +1,7 @@
 package service
 
 import (
+	"strconv"
 	"strings"
 	"zerocmf/internal/biz"
 	"zerocmf/internal/utils"
@@ -188,6 +189,19 @@ func (s *Context) Login(c *gin.Context) {
 	}
 
 	response.Success(c, "登录成功！", token)
+}
+
+// 获取用户信息
+func (s *Context) CurrentUser(c *gin.Context) {
+	ctx := c.Request.Context()
+	id := c.GetString("userId")
+	idInt, _ := strconv.ParseInt(id, 10, 64)
+	user, err := s.uc.FindUserByUserID(ctx, idInt)
+	if err != nil {
+		response.Error(c, err)
+		return
+	}
+	response.Success(c, "获取成功！", user)
 }
 
 // 校验用户信息
