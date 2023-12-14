@@ -2,7 +2,6 @@ package biz
 
 import (
 	"context"
-	"time"
 
 	"gorm.io/gorm"
 )
@@ -11,19 +10,19 @@ type SysMenu struct {
 	MenuID    int64      `gorm:"column:menu_id;primaryKey;comment:菜单ID" json:"menuId"`
 	MenuName  string     `gorm:"column:menu_name;not null;comment:菜单名称" json:"menuName" binding:"required"`
 	ParentID  int64      `gorm:"column:parent_id;default:0;comment:父菜单ID" json:"parentId"`
-	ListOrder int        `gorm:"column:list_order;default:0;comment:显示顺序" json:"listOrder"` // 排序字段名
+	ListOrder int64      `gorm:"column:list_order;default:0;comment:显示顺序" json:"listOrder"` // 排序字段名
 	Path      string     `gorm:"column:path;default:'';comment:路由地址" json:"path"`
 	IsFrame   int        `gorm:"column:is_frame;default:0;comment:是否为外链（0：否 1：是）" json:"isFrame"`
 	MenuType  int        `gorm:"column:menu_type;default:0;comment:菜单类型（0目录 1菜单 2按钮）" json:"menuType"`
 	Visible   string     `gorm:"column:visible;default:1;comment:菜单状态（0：隐藏 1：显示）" json:"visible"`
-	Status    int        `gorm:"column:status;default:1;comment:菜单状态（0：停用 1：显示）" json:"status"`
+	Status    int64      `gorm:"column:status;default:1;comment:菜单状态（0：停用 1：显示）" json:"status"`
 	Perms     string     `gorm:"column:perms;default:null;comment:权限标识" json:"perms"`
 	Icon      string     `gorm:"column:icon;default:'';comment:菜单图标" json:"icon"`
 	CreateId  int64      `gorm:"column:create_id;default:0;comment:创建者" json:"createId"`
-	CreatedAt time.Time  `gorm:"column:created_at;autoCreateTime;index;comment:创建时间" json:"createdAt"`
+	CreatedAt LocalTime  `gorm:"column:created_at;autoCreateTime;index;comment:创建时间" json:"createdAt"`
 	UpdateId  int64      `gorm:"column:update_id;default:0;comment:更新者" json:"updateId"`
-	UpdatedAt time.Time  `gorm:"column:updated_at;autoUpdateTime;index;comment:更新时间" json:"updatedAt"`
-	DeletedAt *time.Time `gorm:"column:deleted_at;default:null;index;comment:删除时间" json:"deletedAt"`
+	UpdatedAt LocalTime  `gorm:"column:updated_at;autoUpdateTime;index;comment:更新时间" json:"updatedAt"`
+	DeletedAt *LocalTime `gorm:"column:deleted_at;default:null;index;comment:删除时间" json:"deletedAt"`
 	Remark    string     `gorm:"column:remark;default:'';comment:备注" json:"remark"`
 	Children  []*SysMenu `gorm:"-" json:"children,omitempty"`
 }

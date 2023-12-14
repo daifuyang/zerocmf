@@ -72,11 +72,13 @@ func (s *menu) recursionImportMenu(ctx context.Context, menu []*biz.SysMenu, par
 			panic("导入菜单失败：" + err.Error())
 		}
 
+		ListOrder := int64(k) + 1
+
 		localOne := &biz.SysMenu{
 			MenuName:  v.MenuName,
 			ParentID:  parentId,
 			Path:      v.Path,
-			ListOrder: k + 1,
+			ListOrder: ListOrder,
 			MenuType:  v.MenuType,
 			Perms:     newPerms,
 			CreateId:  1,

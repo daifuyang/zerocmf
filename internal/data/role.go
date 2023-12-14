@@ -22,11 +22,34 @@ var (
 )
 
 // 查询全部
-func (repo *roleRepo) Find(ctx context.Context) (roles []*biz.SysRole, err error) {
-	tx := repo.data.db.Where("deleted_at is null").Find(&roles)
+func (repo *roleRepo) Find(ctx context.Context, listQuery *biz.SysRoleListQuery) (paginate *biz.Paginate, err error) {
+
+	var total int64 = 0
+
+	tx := repo.data.db.Model(&biz.SysRole{}).Where("deleted_at is null").Count(&total)
 	if tx.Error != nil {
 		err = tx.Error
 		return
+	}
+
+	var roles []*biz.SysRole
+
+	current := listQuery.Current
+	pageSize := listQuery.PageSize
+
+	offset := (current - 1) * pageSize
+
+	tx = repo.data.db.Where("deleted_at is null").Offset(offset).Limit(pageSize).Find(&roles)
+	if tx.Error != nil {
+		err = tx.Error
+		return
+	}
+
+	paginate = &biz.Paginate{
+		Total:    total,
+		Current:  current,
+		PageSize: pageSize,
+		Data:     roles,
 	}
 	return
 }

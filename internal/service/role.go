@@ -3,6 +3,7 @@ package service
 import (
 	"strconv"
 	"zerocmf/internal/biz"
+	"zerocmf/internal/utils"
 	"zerocmf/pkg/response"
 
 	"github.com/gin-gonic/gin"
@@ -21,13 +22,15 @@ func NewRole(c *Context) *role {
 
 // 获取所有角色(分页)
 func (s *role) List(c *gin.Context) {
-	// current, pageSize := utils.ParsePagination(c)
-	data, err := s.rc.Find(c.Request.Context())
+	current, pageSize := utils.ParsePagination(c)
+	paginate, err := s.rc.Find(c.Request.Context(), &biz.SysRoleListQuery{
+		Current: current, PageSize: pageSize,
+	})
 	if err != nil {
 		response.Error(c, err)
 		return
 	}
-	response.Success(c, "获取成功！", data)
+	response.Success(c, "获取成功！", paginate)
 }
 
 // 获取单个角色
@@ -52,7 +55,7 @@ func (s *role) Add(c *gin.Context) {
 	s.Save(c)
 }
 
-// 跟新角色信息
+// 更新角色信息
 func (s *role) Update(c *gin.Context) {
 	s.Save(c)
 }

@@ -24,6 +24,38 @@ type userRepo struct {
 	data *Data
 }
 
+// Find implements biz.UserRepo.
+func (repo *userRepo) Find(ctx context.Context, listQuery *biz.UserListQuery) (*biz.Paginate, error) {
+
+	var total int64 = 0
+
+	userType := listQuery.UserType
+
+	query := "user_type = ?"
+	queryArgs := []interface{}{userType}
+
+	tx := repo.data.db.Where(query, queryArgs...).Model(&biz.User{}).Count(&total)
+	if tx.Error != nil {
+		return nil, tx.Error
+	}
+	current := listQuery.Current
+	pageSize := listQuery.PageSize
+
+	offset := (current - 1) * pageSize
+	var userList []*biz.User
+	tx = repo.data.db.Where(query, queryArgs...).Offset(offset).Limit(pageSize).Find(&userList)
+	if tx.Error != nil {
+		return nil, tx.Error
+	}
+
+	return &biz.Paginate{
+		Current:  current,
+		PageSize: pageSize,
+		Total:    total,
+		Data:     userList,
+	}, nil
+}
+
 // 验证token
 func (repo *userRepo) ValidationBearerToken(req *http.Request) (v4Oauth2.TokenInfo, error) {
 	srv := repo.data.srv

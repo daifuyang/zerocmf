@@ -42,6 +42,13 @@ func RegisterHTTPServer(router *gin.Engine, svcCtx *service.Context) {
 			user.POST("/roles", service.NewRole(svcCtx).Add)
 			user.POST("/roles/:id", service.NewRole(svcCtx).Update)
 			user.DELETE("/roles/:id", service.NewRole(svcCtx).Delete)
+
+			// 管理员相关
+			user.GET("/admins", service.NewAdmin(svcCtx).List)
+			user.GET("/admins/:id", service.NewAdmin(svcCtx).List)
+			user.POST("/admins", service.NewAdmin(svcCtx).Add)
+			user.POST("/admins/:id", service.NewAdmin(svcCtx).Update)
+			user.DELETE("/admins/:id", service.NewAdmin(svcCtx).Delete)
 		}
 
 		// 系统相关

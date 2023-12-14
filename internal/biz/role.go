@@ -2,7 +2,6 @@ package biz
 
 import (
 	"context"
-	"time"
 
 	"gorm.io/gorm"
 )
@@ -16,10 +15,15 @@ type SysRole struct {
 	DeptCheckStrictly bool       `gorm:"column:dept_check_strictly;default:1;comment:部门树选择项是否关联显示" json:"deptCheckStrictly"`
 	Status            int        `gorm:"column:status;not null;default:1;comment:角色状态（1：正常 0：停用）" json:"status"`
 	CreateId          int64      `gorm:"column:create_id;default:0;comment:创建者" json:"createId"`
-	CreatedAt         time.Time  `gorm:"column:created_at;autoCreateTime;index;comment:创建时间" json:"createdAt"`
+	CreatedAt         LocalTime  `gorm:"column:created_at;autoCreateTime;index;comment:创建时间" json:"createdAt"`
 	UpdateId          int64      `gorm:"column:update_id;default:0;comment:更新者" json:"updateId"`
-	UpdatedAt         time.Time  `gorm:"column:updated_at;autoUpdateTime;index;comment:更新时间" json:"updatedAt"`
-	DeletedAt         *time.Time `gorm:"column:deleted_at;default:null;index;comment:删除时间" json:"deletedAt"`
+	UpdatedAt         LocalTime  `gorm:"column:updated_at;autoUpdateTime;index;comment:更新时间" json:"updatedAt"`
+	DeletedAt         *LocalTime `gorm:"column:deleted_at;default:null;index;comment:删除时间" json:"deletedAt"`
+}
+
+type SysRoleListQuery struct {
+	Current  int `form:"current"`
+	PageSize int `form:"pageSize"`
 }
 
 // 设置表名
@@ -37,11 +41,11 @@ func (biz *SysRole) AutoMigrate(db *gorm.DB) error {
 }
 
 type RoleRepo interface {
-	Find(ctx context.Context) (menus []*SysRole, err error)  // 查看全部
-	FindOne(ctx context.Context, id int64) (*SysRole, error) // 查询一条
-	Insert(ctx context.Context, menu *SysRole) (err error)   // 插入一条
-	Update(ctx context.Context, menu *SysRole) (err error)   // 更新一条
-	Delete(ctx context.Context, id int64) error              // 删除一条
+	Find(ctx context.Context, listQuery *SysRoleListQuery) (*Paginate, error) // 查看全部
+	FindOne(ctx context.Context, id int64) (*SysRole, error)                  // 查询一条
+	Insert(ctx context.Context, menu *SysRole) (err error)                    // 插入一条
+	Update(ctx context.Context, menu *SysRole) (err error)                    // 更新一条
+	Delete(ctx context.Context, id int64) error                               // 删除一条
 }
 
 type Roleusecase struct {
@@ -55,8 +59,8 @@ func NewRoleusecase(repo RoleRepo) *Roleusecase {
 }
 
 // 获取全部数据
-func (biz *Roleusecase) Find(ctx context.Context) ([]*SysRole, error) {
-	return biz.repo.Find(ctx)
+func (biz *Roleusecase) Find(ctx context.Context, listQuery *SysRoleListQuery) (*Paginate, error) {
+	return biz.repo.Find(ctx, listQuery)
 }
 
 // 查看一条数据

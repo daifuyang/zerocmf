@@ -3,7 +3,6 @@ package biz
 import (
 	"context"
 	"net/http"
-	"time"
 	"zerocmf/pkg/hashed"
 
 	v4Oauth2 "github.com/go-oauth2/oauth2/v4"
@@ -26,12 +25,12 @@ type User struct {
 	Salt        string    `gorm:"comment:盐加密;size:20;type:varchar(20)" json:"salt"`
 	Status      uint      `gorm:"default:1;comment:帐号状态（0：停用 ,1：启用）;size:2;type:tinyint(2)" json:"status"`
 	LoginIP     string    `gorm:"default:'';comment:最后登录IP;size:128;type:varchar(128)" json:"loginIP"`
-	LoginedAt   time.Time `gorm:"autoCreateTime" json:"loginedAt"`
-	PwdUpdateAt time.Time `gorm:"autoUpdateTime" json:"pwdUpdatedAt"`
+	LoginedAt   LocalTime `gorm:"autoCreateTime" json:"loginedAt"`
+	PwdUpdateAt LocalTime `gorm:"autoUpdateTime" json:"pwdUpdatedAt"`
 	OperateId   uint64    `gorm:"comment:操作人;index" json:"operateId"`
-	CreatedAt   time.Time `gorm:"autoCreateTime;index" json:"createdAt"`
-	UpdatedAt   time.Time `gorm:"autoUpdateTime;index" json:"updatedAt"`
-	DeletedAt   time.Time `gorm:"default:null;comment:删除时间;index" json:"deletedAt"`
+	CreatedAt   LocalTime `gorm:"autoCreateTime;index" json:"createdAt"`
+	UpdatedAt   LocalTime `gorm:"autoUpdateTime;index" json:"updatedAt"`
+	DeletedAt   LocalTime `gorm:"default:null;comment:删除时间;index" json:"deletedAt"`
 	Remark      string    `gorm:"comment:备注;size:500;type:varchar(500)" json:"remark"`
 }
 
@@ -69,6 +68,7 @@ type UserRepo interface {
 	CreateUser(ctx context.Context, user *User) error
 	FindUserByAccount(ctx context.Context, account string) (*User, error)
 	FindUserByPhoneNumber(ctx context.Context, phoneNumber string) (*User, error)
+	Find(ctx context.Context, query *UserListQuery) (*Paginate, error) // 查询列表
 }
 
 type Userusecase struct {
@@ -93,8 +93,14 @@ type SmsCode struct {
 
 type Login struct {
 	Account  string `json:"account"`  // 账号 邮箱 手机号
-	Code     uint   ` json:"code"`    // 手机验证码
+	Code     uint   `json:"code"`     // 手机验证码
 	Password string `json:"password"` // 密码
+}
+
+type UserListQuery struct {
+	Current  int   `form:"current"`
+	PageSize int   `form:"pageSize"`
+	UserType int64 `json:"userType"`
 }
 
 // 业务方组装层，调用repo数据层
@@ -127,4 +133,9 @@ func (uc *Userusecase) FindUserByPhoneNumber(ctx context.Context, phoneNumber st
 // 根据账号推断手机号，邮箱，登录账号
 func (uc *Userusecase) FindUserByAccount(ctx context.Context, account string) (*User, error) {
 	return uc.repo.FindUserByAccount(ctx, account)
+}
+
+// 按分页查询列表
+func (uc *Userusecase) Find(ctx context.Context, query *UserListQuery) (*Paginate, error) {
+	return uc.repo.Find(ctx, query)
 }

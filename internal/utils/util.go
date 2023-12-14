@@ -41,18 +41,18 @@ func UserID(c *gin.Context) (int64, error) {
 }
 
 // pageSzie为0则不显示分页
-func ParsePagination(c *gin.Context) (current, pageSize int64) {
+func ParsePagination(c *gin.Context) (current, pageSize int) {
 
 	page := c.Param("page")
 	size := c.Param("pageSize")
 
 	var err error
 
-	current, err = strconv.ParseInt(page, 10, 64)
+	current, err = strconv.Atoi(page)
 	if err != nil {
 		current = 1
 	}
-	pageSize, err = strconv.ParseInt(size, 10, 64)
+	pageSize, err = strconv.Atoi(size)
 	if err != nil {
 		pageSize = 10
 	}
