@@ -8,10 +8,13 @@ import (
 	"time"
 	"zerocmf/configs"
 	"zerocmf/internal/biz"
+	"zerocmf/pkg/casbinz"
 	cmfOauth2 "zerocmf/pkg/oauth2"
 
 	"github.com/go-oauth2/oauth2/v4/server"
 	"golang.org/x/oauth2"
+
+	"github.com/casbin/casbin/v2"
 
 	"github.com/go-oauth2/mysql/v4"
 	"github.com/go-redis/redis/extra/redisotel"
@@ -31,6 +34,7 @@ type Data struct {
 	srv        *server.Server
 	config     *configs.Config
 	oauth2Conf oauth2.Config
+	e          *casbin.Enforcer
 }
 
 func NewData(config *configs.Config) (*Data, func(), error) {
@@ -94,12 +98,15 @@ func NewData(config *configs.Config) (*Data, func(), error) {
 
 	rdb.AddHook(redisotel.TracingHook{})
 
+	e := casbinz.NewAdapter(config)
+
 	d := &Data{
 		db:         db,
 		rdb:        rdb,
 		config:     config,
 		srv:        srv,
 		oauth2Conf: oauth2Conf,
+		e:          e,
 	}
 
 	return d, func() {

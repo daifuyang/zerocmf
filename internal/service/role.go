@@ -47,6 +47,15 @@ func (s *role) Show(c *gin.Context) {
 		response.Error(c, err)
 		return
 	}
+
+	menuIds, err := s.rc.FindPermissions(c.Request.Context(), id)
+	if err != nil {
+		response.Error(c, err)
+		return
+	}
+
+	data.MenuIds = menuIds
+
 	response.Success(c, "获取成功！", data)
 }
 
@@ -70,6 +79,8 @@ func (s *role) Save(c *gin.Context) {
 		MenuCheckStrictly *bool  `json:"menuCheckStrictly"`
 		DeptCheckStrictly *bool  `json:"deptCheckStrictly"`
 		Status            *int   `json:"status"`
+		Remark            string `json:"remark"`
+		MenuIds           []uint `json:"menuIds"` // 角色拥有的菜单权限id
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -111,8 +122,8 @@ func (s *role) Save(c *gin.Context) {
 			response.Error(c, err)
 			return
 		}
-		saveData = *role
-		err = s.rc.Update(c.Request.Context(), &saveData)
+
+		err = s.rc.Update(c.Request.Context(), role)
 		if err != nil {
 			response.Error(c, err)
 			return

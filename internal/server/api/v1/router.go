@@ -70,8 +70,8 @@ func RegisterHTTPServer(router *gin.Engine, svcCtx *service.Context) {
 			system.POST("/departments/:id", service.NewDeparment(svcCtx).Update)
 
 			// 权限相关
-			system.GET("/permissions/:id", service.NewAuthz(svcCtx).Index)
-			system.POST("/permissions/:id", service.NewAuthz(svcCtx).Save)
+			// system.GET("/permissions/:id", service.NewAuthz(svcCtx).Index)
+			// system.POST("/permissions/:id", service.NewAuthz(svcCtx).Save)
 
 			// 系统监控
 			system.GET("/monitor/server", service.NewMonitor(svcCtx).Index)

@@ -39,8 +39,7 @@ func (s *authz) Index(c *gin.Context) {
 		return
 	}
 
-	access := s.Context.e.GetPermissionsForUser(roleId)
-	response.Success(c, "获取成功！", access)
+	response.Success(c, "获取成功！", nil)
 }
 
 // 辅助函数：检查切片中是否包含某个值

@@ -2,8 +2,6 @@
 package sms
 
 import (
-	"fmt"
-
 	openapi "github.com/alibabacloud-go/darabonba-openapi/v2/client"
 	dysmsapi "github.com/alibabacloud-go/dysmsapi-20170525/v3/client"
 	util "github.com/alibabacloud-go/tea-utils/v2/service"
@@ -33,8 +31,6 @@ type Dysms struct {
 // }
 
 func (d *Dysms) SendSms(phoneNumber string, templateParam string) error {
-
-	fmt.Println("Sending SMS", phoneNumber, templateParam)
 
 	sendSmsRequest := &dysmsapi.SendSmsRequest{
 		PhoneNumbers:  tea.String(phoneNumber),

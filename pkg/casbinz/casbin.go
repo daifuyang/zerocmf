@@ -27,11 +27,6 @@ func NewAdapter(configs *configs.Config) (e *casbin.Enforcer) {
 	}
 
 	e.LoadPolicy()
-
-	e.DeletePermissionForUser("user1", "/api/v1/system/deparment")
-	e.DeletePermissionForUser("user1", "/api/v1/system/deparment/add")
-	e.DeletePermissionForUser("user1", "/api/v1/system/deparment/test")
-
 	e.SavePolicy()
 
 	return e

@@ -2,7 +2,6 @@ package data
 
 import (
 	"context"
-	"fmt"
 	"zerocmf/internal/biz"
 )
 
@@ -19,6 +18,5 @@ func NewTestRepo(data *Data) biz.TestRepo {
 
 // ListArticle implements biz.TestRepo.
 func (*testRepo) ListArticle(ctx context.Context) ([]*biz.Test, error) {
-	fmt.Println("ListArticle")
 	return []*biz.Test{}, nil
 }

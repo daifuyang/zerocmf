@@ -37,9 +37,21 @@ func (date LocalTime) GormDataType() string {
 
 func (date *LocalTime) MarshalJSON() ([]byte, error) {
 	tTime := time.Time(*date)
-	return []byte(fmt.Sprintf("\"%v\"", tTime.Format("2006-01-02 15:04:05"))), nil
+	return []byte(fmt.Sprintf(`"%s"`, tTime.Format(LocalDateTimeFormat))), nil
 }
 
-func (date *LocalTime) UnmarshalJSON(b []byte) error {
-	return (*time.Time)(date).UnmarshalJSON(b)
+// 实现 UnmarshalJSON 方法，将 JSON 字符串反序列化到 LocalTime 类型
+func (lt *LocalTime) UnmarshalJSON(data []byte) error {
+
+	if string(data) == "null" || string(data) == `""` {
+		return nil
+	}
+
+	parsedTime, err := time.Parse(`"`+LocalDateTimeFormat+`"`, string(data))
+	if err != nil {
+		return err
+	}
+
+	*lt = LocalTime(parsedTime)
+	return nil
 }

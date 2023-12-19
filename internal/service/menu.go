@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"os"
 	"strconv"
 	"zerocmf/internal/biz"
@@ -128,7 +127,6 @@ func (s *menu) Tree(c *gin.Context) {
 		return
 	}
 	menus := recursionMenu(sysMenu, 0)
-	fmt.Println("menus", menus)
 	response.Success(c, "获取成功！", menus)
 }
 

@@ -6,71 +6,127 @@
     "icon": "home"
   },
   {
-    "perms": "settings",
-    "menuName": "系统设置",
-    "path": "/settings",
+    "perms": "system",
+    "menuName": "系统管理",
+    "path": "/system",
     "icon": "setting",
     "children": [
       {
-        "perms": "websites",
-        "menuName": "网站设置",
-        "path": "/settings/websites",
+        "perms": "user",
+        "menuName": "用户设置",
+        "path": "/settings/user",
         "children": [
-          {
-            "perms": "show",
-            "menuName": "详情"
-          },
-          {
-            "perms": "save",
-            "menuName": "保存",
-            "menuType": 2
-          }
-        ]
-      },
-      {
-        "perms": "upload",
-        "menuName": "上传设置",
-        "path": "/settings/upload",
-        "children": [
-          {
-            "perms": "show",
-            "menuName": "详情"
-          },
-          {
-            "perms": "save",
-            "menuName": "保存",
-            "menuType": 2
-          }
-        ]
-      },
-      {
-        "perms": "assets",
-        "menuName": "资源管理",
-        "path": "/settings/assets",
-        "children": [
-          {
-            "perms": "list",
-            "menuName": "资源列表",
-            "path": "/settings/assets/list"
-          },
           {
             "perms": "add",
-            "menuName": "添加资源",
-            "path": "/settings/assets/add"
-          },
-          {
-            "perms": "show",
-            "menuName": "查看资源",
-            "path": "/settings/assets/:id"
+            "menuName": "新增用户",
+            "menuType": 2
           },
           {
             "perms": "edit",
-            "menuName": "编辑资源",
+            "menuName": "修改用户",
             "menuType": 2
           },
           {
             "perms": "delete",
-            "menuName": "删除资源",
+            "menuName": "删除用户",
+            "menuType": 2
+          },
+          {
+            "perms": "import",
+            "menuName": "导入用户",
+            "menuType": 2
+          },
+          {
+            "perms": "export",
+            "menuName": "导出用户",
+            "menuType": 2
+          }
+        ]
+      },
+      {
+        "perms": "role",
+        "menuName": "角色管理",
+        "path": "/system/role",
+        "children": [
+          {
+            "perms": "add",
+            "menuName": "新增角色",
+            "menuType": 2
+          },
+          {
+            "perms": "edit",
+            "menuName": "修改角色",
+            "menuType": 2
+          },
+          {
+            "perms": "delete",
+            "menuName": "删除角色",
+            "menuType": 2
+          }
+        ]
+      },
+      {
+        "perms": "menu",
+        "menuName": "菜单管理",
+        "path": "/system/menu",
+        "children": [
+          {
+            "perms": "add",
+            "menuName": "新增菜单",
+            "menuType": 2
+          },
+          {
+            "perms": "edit",
+            "menuName": "修改菜单",
+            "menuType": 2
+          },
+          {
+            "perms": "delete",
+            "menuName": "删除菜单",
+            "menuType": 2
+          }
+        ]
+      },
+      {
+        "perms": "dept",
+        "menuName": "部门管理",
+        "path": "/system/dept",
+        "children": [
+          {
+            "perms": "add",
+            "menuName": "新增部门",
+            "menuType": 2
+          },
+          {
+            "perms": "edit",
+            "menuName": "修改部门",
+            "menuType": 2
+          },
+          {
+            "perms": "delete",
+            "menuName": "删除部门",
+            "menuType": 2
+          }
+        ]
+      },
+      {
+        "perms": "post",
+        "menuName": "岗位管理",
+        "path": "/system/post",
+        "children": [
+          {
+            "perms": "add",
+            "menuName": "新增岗位",
+            "menuType": 2
+          },
+          {
+            "perms": "edit",
+            "menuName": "修改岗位",
+            "menuType": 2
+          },
+          {
+            "perms": "delete",
+            "menuName": "删除岗位",
             "menuType": 2
           }
         ]
