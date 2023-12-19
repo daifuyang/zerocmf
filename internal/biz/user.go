@@ -19,7 +19,7 @@ type User struct {
 	UserType    uint      `gorm:"default:1;comment:用户类型（0:系统用户 1:注册用户）;size:2;type:tinyint(2)" json:"userType"`
 	Email       string    `gorm:"default:null;comment:用户邮箱;size:50;type:varchar(50)" json:"email"`
 	PhoneNumber string    `gorm:"default:null;comment:手机号码;size:11;type:varchar(11)" json:"phoneNumber"`
-	Sex         uint      `gorm:"default:0;comment:用户性别（0男 1女 2未知）;size:2;type:tinyint(2)" json:"sex"`
+	Gender      uint      `gorm:"default:0;comment:用户性别（0男 1女 2未知）;size:2;type:tinyint(2)" json:"gender"`
 	Avatar      string    `gorm:"comment:头像路径;size:100;type:varchar(100)" json:"avatar"`
 	Password    string    `gorm:"not null;comment:密码;size:100;type:varchar(100)" json:"-"`
 	Salt        string    `gorm:"comment:盐加密;size:20;type:varchar(20)" json:"salt"`
