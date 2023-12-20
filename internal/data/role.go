@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 	"zerocmf/internal/biz"
 
@@ -28,7 +29,20 @@ var (
 func (repo *roleRepo) Find(ctx context.Context, listQuery *biz.SysRoleListQuery) (paginate *biz.Paginate, err error) {
 
 	var total int64 = 0
+	query := []string{"deleted_at is null"}
+	queryArgs := make([]interface{}, 0)
 
+	if strings.TrimSpace(listQuery.RoleName) != "" {
+		query = append(query, "role_name like ?")
+		queryArgs = append(queryArgs, "%"+listQuery.RoleName+"%")
+	}
+
+	if listQuery.Status != nil {
+		query = append(query, "status = ?")
+		queryArgs = append(queryArgs, *listQuery.Status)
+	}
+
+	queryStr := strings.Join(query, " and ")
 	tx := repo.data.db.Model(&biz.SysRole{}).Where("deleted_at is null").Count(&total)
 	if tx.Error != nil {
 		err = tx.Error
@@ -36,13 +50,11 @@ func (repo *roleRepo) Find(ctx context.Context, listQuery *biz.SysRoleListQuery)
 	}
 
 	var roles []*biz.SysRole
-
 	current := listQuery.Current
 	pageSize := listQuery.PageSize
-
 	offset := (current - 1) * pageSize
 
-	tx = repo.data.db.Where("deleted_at is null").Offset(offset).Limit(pageSize).Find(&roles)
+	tx = repo.data.db.Where(queryStr, queryArgs...).Offset(offset).Limit(pageSize).Find(&roles)
 	if tx.Error != nil {
 		err = tx.Error
 		return

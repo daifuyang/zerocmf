@@ -3,7 +3,6 @@ package service
 import (
 	"strconv"
 	"zerocmf/internal/biz"
-	"zerocmf/internal/utils"
 	"zerocmf/pkg/response"
 
 	"github.com/gin-gonic/gin"
@@ -22,10 +21,14 @@ func NewRole(c *Context) *role {
 
 // 获取所有角色(分页)
 func (s *role) List(c *gin.Context) {
-	current, pageSize := utils.ParsePagination(c)
-	paginate, err := s.rc.Find(c.Request.Context(), &biz.SysRoleListQuery{
-		Current: current, PageSize: pageSize,
-	})
+
+	var query biz.SysRoleListQuery
+	if err := c.ShouldBindQuery(&query); err != nil {
+		response.Error(c, err)
+		return
+	}
+
+	paginate, err := s.rc.Find(c.Request.Context(), &query)
 	if err != nil {
 		response.Error(c, err)
 		return
@@ -80,7 +83,7 @@ func (s *role) Save(c *gin.Context) {
 		DeptCheckStrictly *bool  `json:"deptCheckStrictly"`
 		Status            *int   `json:"status"`
 		Remark            string `json:"remark"`
-		MenuIds           []uint `json:"menuIds"` // 角色拥有的菜单权限id
+		MenuIds           []int  `json:"menuIds"` // 角色拥有的菜单权限id
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
