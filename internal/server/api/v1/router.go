@@ -36,12 +36,19 @@ func RegisterHTTPServer(router *gin.Engine, svcCtx *service.Context) {
 			user.Use(svcCtx.AuthMiddleware)
 			user.GET("/current_user", svcCtx.CurrentUser)
 
-			// 角色相关
+			// 角色管理
 			user.GET("/roles", service.NewRole(svcCtx).List)
 			user.GET("/roles/:id", service.NewRole(svcCtx).Show)
 			user.POST("/roles", service.NewRole(svcCtx).Add)
 			user.POST("/roles/:id", service.NewRole(svcCtx).Update)
 			user.DELETE("/roles/:id", service.NewRole(svcCtx).Delete)
+
+			// 部门管理
+			user.GET("/post", service.NewPost(svcCtx).List)
+			user.GET("/post/:id", service.NewPost(svcCtx).Show)
+			user.POST("/post", service.NewPost(svcCtx).Add)
+			user.POST("/post/:id", service.NewPost(svcCtx).Update)
+			user.DELETE("/post/:id", service.NewPost(svcCtx).Delete)
 
 			// 管理员相关
 			user.GET("/admins", service.NewAdmin(svcCtx).List)

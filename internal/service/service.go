@@ -20,9 +20,10 @@ type Context struct {
 	dc     *biz.Depatmentusecase
 	rc     *biz.Roleusecase
 	mc     *biz.Menusecase
+	postuc *biz.Postusecase
 }
 
-func NewContext(config *configs.Config, uc *biz.Userusecase, smsc *biz.Smsusecase, dc *biz.Depatmentusecase, mc *biz.Menusecase, rc *biz.Roleusecase) *Context {
+func NewContext(config *configs.Config, uc *biz.Userusecase, smsc *biz.Smsusecase, dc *biz.Depatmentusecase, mc *biz.Menusecase, rc *biz.Roleusecase, postuc *biz.Postusecase) *Context {
 
 	logger, err := zap.NewProduction()
 	if err != nil {
@@ -38,5 +39,6 @@ func NewContext(config *configs.Config, uc *biz.Userusecase, smsc *biz.Smsusecas
 		dc:     dc,
 		mc:     mc,
 		rc:     rc,
+		postuc: postuc,
 	}
 }
