@@ -26,8 +26,7 @@ type SysRole struct {
 type SysRoleListQuery struct {
 	RoleName string `form:"roleName"`
 	Status   *int   `form:"status"`
-	Current  int    `form:"current"`
-	PageSize int    `form:"pageSize"`
+	PaginateQuery
 }
 
 // 设置表名
@@ -45,12 +44,12 @@ func (biz *SysRole) AutoMigrate(db *gorm.DB) error {
 }
 
 type RoleRepo interface {
-	Find(ctx context.Context, listQuery *SysRoleListQuery) (*Paginate, error) // 查看全部
-	FindOne(ctx context.Context, id int64) (*SysRole, error)                  // 查询一条
-	FindPermissions(ctx context.Context, id int64) ([]*int, error)            // 查询角色授权通过的权限
-	Insert(ctx context.Context, menu *SysRole) (err error)                    // 插入一条
-	Update(ctx context.Context, menu *SysRole) (err error)                    // 更新一条
-	Delete(ctx context.Context, id int64) error                               // 删除一条
+	Find(ctx context.Context, listQuery *SysRoleListQuery) (interface{}, error) // 查看全部
+	FindOne(ctx context.Context, id int64) (*SysRole, error)                    // 查询一条
+	FindPermissions(ctx context.Context, id int64) ([]*int, error)              // 查询角色授权通过的权限
+	Insert(ctx context.Context, menu *SysRole) (err error)                      // 插入一条
+	Update(ctx context.Context, menu *SysRole) (err error)                      // 更新一条
+	Delete(ctx context.Context, id int64) error                                 // 删除一条
 }
 
 type Roleusecase struct {
@@ -64,7 +63,7 @@ func NewRoleusecase(repo RoleRepo) *Roleusecase {
 }
 
 // 获取全部数据
-func (biz *Roleusecase) Find(ctx context.Context, listQuery *SysRoleListQuery) (*Paginate, error) {
+func (biz *Roleusecase) Find(ctx context.Context, listQuery *SysRoleListQuery) (interface{}, error) {
 	return biz.repo.Find(ctx, listQuery)
 }
 
@@ -78,17 +77,17 @@ func (biz *Roleusecase) FindPermissions(ctx context.Context, id int64) ([]*int, 
 	return biz.repo.FindPermissions(ctx, id)
 }
 
-// 插入一条数据
-func (biz *Roleusecase) Insert(ctx context.Context, role *SysRole) (err error) {
+// 新增一条数据
+func (biz *Roleusecase) Insert(ctx context.Context, role *SysRole) error {
 	return biz.repo.Insert(ctx, role)
 }
 
 // 更新一条数据
-func (biz *Roleusecase) Update(ctx context.Context, role *SysRole) (err error) {
+func (biz *Roleusecase) Update(ctx context.Context, role *SysRole) error {
 	return biz.repo.Update(ctx, role)
 }
 
-// 软删除一条数据
+// 删除一条数据
 func (biz *Roleusecase) Delete(ctx context.Context, id int64) (*SysRole, error) {
 	one, err := biz.repo.FindOne(ctx, id)
 	if err != nil {

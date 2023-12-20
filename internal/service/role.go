@@ -19,7 +19,7 @@ func NewRole(c *Context) *role {
 	}
 }
 
-// 获取所有角色(分页)
+// 获取所有角色
 func (s *role) List(c *gin.Context) {
 
 	var query biz.SysRoleListQuery
@@ -28,12 +28,12 @@ func (s *role) List(c *gin.Context) {
 		return
 	}
 
-	paginate, err := s.rc.Find(c.Request.Context(), &query)
+	data, err := s.rc.Find(c.Request.Context(), &query)
 	if err != nil {
 		response.Error(c, err)
 		return
 	}
-	response.Success(c, "获取成功！", paginate)
+	response.Success(c, "获取成功！", data)
 }
 
 // 获取单个角色

@@ -26,7 +26,7 @@ var (
 )
 
 // 查询全部
-func (repo *roleRepo) Find(ctx context.Context, listQuery *biz.SysRoleListQuery) (paginate *biz.Paginate, err error) {
+func (repo *roleRepo) Find(ctx context.Context, listQuery *biz.SysRoleListQuery) (data interface{}, err error) {
 
 	var total int64 = 0
 	query := []string{"deleted_at is null"}
@@ -43,16 +43,37 @@ func (repo *roleRepo) Find(ctx context.Context, listQuery *biz.SysRoleListQuery)
 	}
 
 	queryStr := strings.Join(query, " and ")
+
+	var roles []*biz.SysRole
+	_current := listQuery.Current
+	if _current == nil {
+		*_current = 1
+	}
+	_pageSize := listQuery.PageSize
+	if _pageSize == nil {
+		*_pageSize = 10
+	}
+
+	current := *_current
+	pageSize := *_pageSize
+
+	offset := (current - 1) * pageSize
+
+	if pageSize == 0 {
+		tx := repo.data.db.Where(queryStr, queryArgs...).Find(&roles)
+		if tx.Error != nil {
+			err = tx.Error
+			return
+		}
+		data = roles
+		return
+	}
+
 	tx := repo.data.db.Model(&biz.SysRole{}).Where("deleted_at is null").Count(&total)
 	if tx.Error != nil {
 		err = tx.Error
 		return
 	}
-
-	var roles []*biz.SysRole
-	current := listQuery.Current
-	pageSize := listQuery.PageSize
-	offset := (current - 1) * pageSize
 
 	tx = repo.data.db.Where(queryStr, queryArgs...).Offset(offset).Limit(pageSize).Find(&roles)
 	if tx.Error != nil {
@@ -60,7 +81,7 @@ func (repo *roleRepo) Find(ctx context.Context, listQuery *biz.SysRoleListQuery)
 		return
 	}
 
-	paginate = &biz.Paginate{
+	data = &biz.Paginate{
 		Total:    total,
 		Current:  current,
 		PageSize: pageSize,
