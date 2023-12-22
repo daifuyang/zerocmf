@@ -302,7 +302,7 @@ return &Context{
 }
 ```
 
-终端生成wire依赖 
+终端生成wire依赖
 
 ```shell
 cd cmd/server

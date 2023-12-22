@@ -4,6 +4,7 @@ import (
 	"errors"
 	"regexp"
 	"strconv"
+	"zerocmf/internal/vars"
 
 	"github.com/gin-gonic/gin"
 )
@@ -28,7 +29,7 @@ func AccountType(account string) string {
 }
 
 func UserID(c *gin.Context) (int64, error) {
-	userIdI, exist := c.Get("userId")
+	userIdI, exist := c.Get(vars.USERID)
 	if !exist {
 		return 0, errors.New("用户登录已失效")
 	}

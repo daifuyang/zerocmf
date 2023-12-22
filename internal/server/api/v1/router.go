@@ -44,11 +44,11 @@ func RegisterHTTPServer(router *gin.Engine, svcCtx *service.Context) {
 			user.DELETE("/roles/:id", service.NewRole(svcCtx).Delete)
 
 			// 部门管理
-			user.GET("/post", service.NewPost(svcCtx).List)
-			user.GET("/post/:id", service.NewPost(svcCtx).Show)
-			user.POST("/post", service.NewPost(svcCtx).Add)
-			user.POST("/post/:id", service.NewPost(svcCtx).Update)
-			user.DELETE("/post/:id", service.NewPost(svcCtx).Delete)
+			user.GET("/posts", service.NewPost(svcCtx).List)
+			user.GET("/posts/:id", service.NewPost(svcCtx).Show)
+			user.POST("/posts", service.NewPost(svcCtx).Add)
+			user.POST("/posts/:id", service.NewPost(svcCtx).Update)
+			user.DELETE("/posts/:id", service.NewPost(svcCtx).Delete)
 
 			// 管理员相关
 			user.GET("/admins", service.NewAdmin(svcCtx).List)

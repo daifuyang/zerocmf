@@ -32,7 +32,9 @@ func wireApp(config *configs.Config) (App, func(), error) {
 	menusecase := biz.NewMenusecase(menuRepo)
 	roleRepo := data.NewRoleRepo(dataData)
 	roleusecase := biz.NewRoleusecase(roleRepo)
-	context := service.NewContext(config, userusecase, smsusecase, depatmentusecase, menusecase, roleusecase)
+	postRepo := data.NewPostRepo(dataData)
+	postusecase := biz.NewPostusecase(postRepo)
+	context := service.NewContext(config, userusecase, smsusecase, depatmentusecase, menusecase, roleusecase, postusecase)
 	serverServer := server.NewHTTPServer(context)
 	app := newApp(serverServer)
 	return app, func() {

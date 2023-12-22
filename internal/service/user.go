@@ -5,6 +5,7 @@ import (
 	"strings"
 	"zerocmf/internal/biz"
 	"zerocmf/internal/utils"
+	"zerocmf/internal/vars"
 	"zerocmf/pkg/hashed"
 	"zerocmf/pkg/response"
 	"zerocmf/pkg/sms"
@@ -50,7 +51,7 @@ func (s *Context) Register(c *gin.Context) {
 				Code:      code,
 				Account:   account,
 				Type:      "phone",
-				SceneCode: PHONE_REGISTER_SCENE_CODE,
+				SceneCode: vars.PHONE_REGISTER_SCENE_CODE,
 			})
 
 			if err != nil {
@@ -129,7 +130,7 @@ func (s *Context) SendRegisterCode(c *gin.Context) {
 			Account:   account,
 			Type:      "phone",
 			ClientIP:  clientIP,
-			SceneCode: PHONE_REGISTER_SCENE_CODE,
+			SceneCode: vars.PHONE_REGISTER_SCENE_CODE,
 		})
 
 		if err != nil {
@@ -211,6 +212,6 @@ func (s *Context) AuthMiddleware(c *gin.Context) {
 		response.Error(c, response.ErrAuth)
 		return
 	}
-	c.Set("userId", token.GetUserID())
+	c.Set(vars.USERID, token.GetUserID())
 	c.Next()
 }

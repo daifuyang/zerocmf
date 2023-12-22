@@ -45,17 +45,8 @@ func (repo *roleRepo) Find(ctx context.Context, listQuery *biz.SysRoleListQuery)
 	queryStr := strings.Join(query, " and ")
 
 	var roles []*biz.SysRole
-	_current := listQuery.Current
-	if _current == nil {
-		*_current = 1
-	}
-	_pageSize := listQuery.PageSize
-	if _pageSize == nil {
-		*_pageSize = 10
-	}
 
-	current := *_current
-	pageSize := *_pageSize
+	current, pageSize := biz.ParsePaginate(listQuery.Current, listQuery.PageSize)
 
 	offset := (current - 1) * pageSize
 

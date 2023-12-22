@@ -46,12 +46,17 @@ func (lt *LocalTime) UnmarshalJSON(data []byte) error {
 	if string(data) == "null" || string(data) == `""` {
 		return nil
 	}
-
 	parsedTime, err := time.Parse(`"`+LocalDateTimeFormat+`"`, string(data))
 	if err != nil {
 		return err
 	}
-
 	*lt = LocalTime(parsedTime)
+
+	fmt.Println("unmarshal", *lt)
+
 	return nil
+}
+
+func (lt *LocalTime) String() string {
+	return time.Time(*lt).Format(LocalDateTimeFormat)
 }

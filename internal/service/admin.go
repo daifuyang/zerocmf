@@ -2,7 +2,6 @@ package service
 
 import (
 	"zerocmf/internal/biz"
-	"zerocmf/internal/utils"
 	"zerocmf/pkg/response"
 
 	"github.com/gin-gonic/gin"
@@ -21,8 +20,7 @@ func NewAdmin(c *Context) *admin {
 // 列表
 
 func (s *admin) List(c *gin.Context) {
-	current, pageSize := utils.ParsePagination(c)
-	paginate, err := s.uc.Find(c.Request.Context(), &biz.UserListQuery{Current: current, PageSize: pageSize, UserType: 1})
+	paginate, err := s.uc.Find(c.Request.Context(), &biz.UserListQuery{Current: 1, PageSize: 10, UserType: 1})
 	if err != nil {
 		response.Error(c, err)
 		return

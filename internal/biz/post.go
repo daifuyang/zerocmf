@@ -9,16 +9,16 @@ import (
 // SysPost 表示 sys_post 表的数据模型
 type SysPost struct {
 	PostID    int64      `gorm:"column:post_id;primaryKey;comment:岗位ID" json:"postId"`
-	PostCode  string     `gorm:"column:post_code;size:64;unique;not null;comment:岗位编码" json:"postCode"`
-	PostName  string     `gorm:"column:post_name;size:50;not null;comment:岗位名称" json:"postName"`
-	ListOrder int        `gorm:"column:list_order;not null;comment:显示顺序" json:"listOrder"`
-	Status    string     `gorm:"column:status;size:1;not null;default 1;comment:状态（1正常;0停用）" json:"status"`
-	CreateId  int64      `gorm:"column:create_id;default:0;comment:创建者" json:"createId"`
+	PostCode  string     `gorm:"column:post_code;type:varchar(64);unique;not null;comment:岗位编码" json:"postCode"`
+	PostName  string     `gorm:"column:post_name;type:varchar(50);not null;comment:岗位名称" json:"postName"`
+	ListOrder int        `gorm:"column:list_order;not null;type:int(8);comment:显示顺序" json:"listOrder"`
+	Status    int        `gorm:"column:status;type:tinyint(2);not null;default 1;comment:状态（1正常;0停用）" json:"status"`
+	CreateId  int64      `gorm:"column:create_id;type:bigint(20);comment:创建者" json:"createId"`
 	CreatedAt LocalTime  `gorm:"column:created_at;autoCreateTime;index;comment:创建时间" json:"createdAt"`
-	UpdateId  int64      `gorm:"column:update_id;default:0;comment:更新者" json:"updateId"`
+	UpdateId  int64      `gorm:"column:update_id;type:bigint(20);comment:更新者" json:"updateId"`
 	UpdatedAt LocalTime  `gorm:"column:updated_at;autoUpdateTime;index;comment:更新时间" json:"updatedAt"`
 	DeletedAt *LocalTime `gorm:"column:deleted_at;default:null;index;comment:删除时间" json:"deletedAt"`
-	Remark    string     `gorm:"comment:备注;size:500;type:varchar(500)" json:"remark"`
+	Remark    string     `gorm:"comment:备注;type:varchar(500)" json:"remark"`
 }
 
 // 列表筛选条件
@@ -48,8 +48,8 @@ func (biz *SysPost) AutoMigrate(db *gorm.DB) error {
 type PostRepo interface {
 	Find(ctx context.Context, listQuery *SysPostListQuery) (interface{}, error) // 查看全部
 	FindOne(ctx context.Context, id int64) (*SysPost, error)                    // 查询一条
-	Insert(ctx context.Context, menu *SysPost) (err error)                      // 插入一条
-	Update(ctx context.Context, menu *SysPost) (err error)                      // 更新一条
+	Insert(ctx context.Context, post *SysPost) (err error)                      // 插入一条
+	Update(ctx context.Context, post *SysPost) (err error)                      // 更新一条
 	Delete(ctx context.Context, id int64) error                                 // 删除一条
 }
 
