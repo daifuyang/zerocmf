@@ -8,17 +8,13 @@ import (
 
 // SysPost 表示 sys_post 表的数据模型
 type SysPost struct {
-	PostID    int64      `gorm:"column:post_id;primaryKey;comment:岗位ID" json:"postId"`
-	PostCode  string     `gorm:"column:post_code;type:varchar(64);unique;not null;comment:岗位编码" json:"postCode"`
-	PostName  string     `gorm:"column:post_name;type:varchar(50);not null;comment:岗位名称" json:"postName"`
-	ListOrder int        `gorm:"column:list_order;not null;type:int(8);comment:显示顺序" json:"listOrder"`
-	Status    int        `gorm:"column:status;type:tinyint(2);not null;default 1;comment:状态（1正常;0停用）" json:"status"`
-	CreateId  int64      `gorm:"column:create_id;type:bigint(20);comment:创建者" json:"createId"`
-	CreatedAt LocalTime  `gorm:"column:created_at;autoCreateTime;index;comment:创建时间" json:"createdAt"`
-	UpdateId  int64      `gorm:"column:update_id;type:bigint(20);comment:更新者" json:"updateId"`
-	UpdatedAt LocalTime  `gorm:"column:updated_at;autoUpdateTime;index;comment:更新时间" json:"updatedAt"`
-	DeletedAt *LocalTime `gorm:"column:deleted_at;default:null;index;comment:删除时间" json:"deletedAt"`
-	Remark    string     `gorm:"comment:备注;type:varchar(500)" json:"remark"`
+	PostID    int64  `gorm:"column:post_id;primaryKey;comment:岗位ID" json:"postId"`
+	PostCode  string `gorm:"column:post_code;type:varchar(64);not null;comment:岗位编码" json:"postCode"`
+	PostName  string `gorm:"column:post_name;type:varchar(50);not null;comment:岗位名称" json:"postName"`
+	ListOrder int    `gorm:"column:list_order;not null;type:int(8);comment:显示顺序" json:"listOrder"`
+	Status    int    `gorm:"column:status;type:tinyint(2);not null;default 1;comment:状态（1正常;0停用）" json:"status"`
+	Remark    string `gorm:"comment:备注;type:varchar(500)" json:"remark"`
+	SysInfo
 }
 
 // 列表筛选条件
@@ -41,12 +37,52 @@ func (biz *SysPost) AutoMigrate(db *gorm.DB) error {
 	if err != nil {
 		return err
 	}
+
+	// 创建演示数据
+
+	if err := db.Where("post_code = 'CEO'").FirstOrCreate(&SysPost{
+		PostID:    0,
+		PostCode:  "CEO",
+		PostName:  "董事长",
+		ListOrder: 0,
+		Status:    1,
+		Remark:    "",
+		SysInfo: SysInfo{
+			CreateId: 1,
+		},
+	}).Error; err != nil {
+		return err
+	}
+
+	if err := db.Where("post_code = 'SE'").FirstOrCreate(&SysPost{
+		PostCode: "SE",
+		PostName: "项目经理",
+		Status:   1,
+		SysInfo: SysInfo{
+			CreateId: 1,
+		},
+	}).Error; err != nil {
+		return err
+	}
+
+	if err := db.Where("post_code = 'HR'").FirstOrCreate(&SysPost{
+		PostCode: "HR",
+		PostName: "人力资源",
+		Status:   1,
+		SysInfo: SysInfo{
+			CreateId: 1,
+		},
+	}).Error; err != nil {
+		return err
+	}
+
 	return nil
 }
 
 // 定义repo实体接口 （依赖倒置原则）
 type PostRepo interface {
 	Find(ctx context.Context, listQuery *SysPostListQuery) (interface{}, error) // 查看全部
+	First(query interface{}, args ...interface{}) (*SysPost, error)             // 根据条件查询一条
 	FindOne(ctx context.Context, id int64) (*SysPost, error)                    // 查询一条
 	Insert(ctx context.Context, post *SysPost) (err error)                      // 插入一条
 	Update(ctx context.Context, post *SysPost) (err error)                      // 更新一条
@@ -68,6 +104,11 @@ func NewPostusecase(repo PostRepo) *Postusecase {
 // 获取列表
 func (biz *Postusecase) Find(ctx context.Context, listQuery *SysPostListQuery) (interface{}, error) {
 	return biz.repo.Find(ctx, listQuery)
+}
+
+// 根据条件查询一条
+func (biz *Postusecase) First(query interface{}, args ...interface{}) (*SysPost, error) {
+	return biz.repo.First(query, args...)
 }
 
 // 获取一条数据

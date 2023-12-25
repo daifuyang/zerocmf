@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 	"zerocmf/internal/biz"
 
 	"github.com/go-redis/redis/v8"
@@ -31,8 +32,8 @@ func (repo *PostRepo) Find(ctx context.Context, listQuery *biz.SysPostListQuery)
 	}
 
 	if strings.TrimSpace(listQuery.PostCode) != "" {
-		query = append(query, "post_code = ?")
-		queryArgs = append(queryArgs, listQuery.PostCode)
+		query = append(query, "post_code like ?")
+		queryArgs = append(queryArgs, "%"+listQuery.PostCode+"%")
 	}
 
 	// 状态
@@ -81,6 +82,15 @@ func (repo *PostRepo) Find(ctx context.Context, listQuery *biz.SysPostListQuery)
 
 }
 
+func (repo *PostRepo) First(query interface{}, args ...interface{}) (*biz.SysPost, error) {
+	var sysPost *biz.SysPost
+	tx := repo.data.db.Where(query, args...).First(&sysPost)
+	if tx.Error != nil {
+		return nil, tx.Error
+	}
+	return sysPost, nil
+}
+
 // 获取
 func (repo *PostRepo) FindOne(ctx context.Context, id int64) (*biz.SysPost, error) {
 
@@ -116,13 +126,19 @@ func (repo *PostRepo) Insert(ctx context.Context, post *biz.SysPost) (err error)
 
 // Update implements biz.PostRepo.
 func (repo *PostRepo) Update(ctx context.Context, post *biz.SysPost) (err error) {
+
+	key := fmt.Sprintf("%s%v", postCachePrefix, post.PostID)
+	repo.data.rdb.Del(ctx, key)
+
 	tx := repo.data.db.Save(&post)
 	return tx.Error
 }
 
 // Delete implements biz.PostRepo.
-func (*PostRepo) Delete(ctx context.Context, id int64) error {
-	panic("unimplemented")
+func (repo *PostRepo) Delete(ctx context.Context, id int64) error {
+	key := fmt.Sprintf("%s%v", postCachePrefix, id)
+	repo.data.rdb.Del(ctx, key)
+	return repo.data.db.Model(&biz.SysPost{}).Where("post_id = ?", id).Update("deleted_at", time.Now()).Error
 }
 
 func NewPostRepo(data *Data) biz.PostRepo {

@@ -2,12 +2,14 @@ package service
 
 import (
 	"strconv"
+	"strings"
 	"zerocmf/internal/biz"
 	"zerocmf/internal/utils"
 	"zerocmf/pkg/response"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/copier"
+	"gorm.io/gorm"
 )
 
 type post struct {
@@ -92,8 +94,24 @@ func (s *post) Save(c *gin.Context) {
 
 	msg := "添加成功！"
 
+	query := []string{"deleted_at is null", "post_code = ?"}
+	queryArgs := []interface{}{req.PostCode}
+	queryStr := strings.Join(query, " AND ")
+
+	first, firstErr := s.postuc.First(queryStr, queryArgs...)
+	if firstErr != nil && firstErr != gorm.ErrRecordNotFound {
+		response.Error(c, firstErr)
+		return
+	}
+
 	if id == "" {
-		err := copier.Copy(&saveData, &req)
+
+		if first != nil {
+			response.Error(c, "该岗位编码已存在！")
+			return
+		}
+
+		err = copier.Copy(&saveData, &req)
 		if err != nil {
 			response.Error(c, err)
 			return
@@ -117,6 +135,12 @@ func (s *post) Save(c *gin.Context) {
 			response.Error(c, err)
 			return
 		}
+
+		if first != nil && first.PostID != one.PostID {
+			response.Error(c, "该岗位编码已存在！")
+			return
+		}
+
 		err = copier.Copy(&one, &req)
 		if err != nil {
 			response.Error(c, err)
@@ -137,5 +161,18 @@ func (s *post) Save(c *gin.Context) {
 
 // 删除单个岗位
 func (s *post) Delete(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		response.Error(c, err)
+		return
+	}
 
+	sysPost, err := s.postuc.Delete(c.Request.Context(), id)
+
+	if err != nil {
+		response.Error(c, err)
+		return
+	}
+
+	response.Success(c, "删除成功", sysPost)
 }
