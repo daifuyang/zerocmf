@@ -30,19 +30,13 @@ func (date LocalTime) Value() (driver.Value, error) {
 	return tlt, nil
 }
 
-// GormDataType gorm common data type
-func (date LocalTime) GormDataType() string {
-	return "time"
-}
-
-func (date *LocalTime) MarshalJSON() ([]byte, error) {
-	tTime := time.Time(*date)
+func (date LocalTime) MarshalJSON() ([]byte, error) {
+	tTime := time.Time(date)
 	return []byte(fmt.Sprintf(`"%s"`, tTime.Format(LocalDateTimeFormat))), nil
 }
 
 // 实现 UnmarshalJSON 方法，将 JSON 字符串反序列化到 LocalTime 类型
 func (lt *LocalTime) UnmarshalJSON(data []byte) error {
-
 	if string(data) == "null" || string(data) == `""` {
 		return nil
 	}
@@ -51,12 +45,9 @@ func (lt *LocalTime) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	*lt = LocalTime(parsedTime)
-
-	fmt.Println("unmarshal", *lt)
-
 	return nil
 }
 
-func (lt *LocalTime) String() string {
-	return time.Time(*lt).Format(LocalDateTimeFormat)
+func (lt LocalTime) String() string {
+	return time.Time(lt).Format(LocalDateTimeFormat)
 }
