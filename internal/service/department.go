@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"strconv"
 	"zerocmf/internal/biz"
 	"zerocmf/internal/utils"
@@ -41,8 +42,15 @@ func buildDeptTree(depts []*biz.SysDept, parentID int64) []*DeptTree {
 
 // 查询列表树
 func (s *department) Tree(c *gin.Context) {
+
+	// 解析请求参数
+	var query biz.SysDeptListQuery
+	if err := c.ShouldBindQuery(&query); err != nil {
+		response.Error(c, err)
+		return
+	}
 	ctx := c.Request.Context()
-	sysDept, err := s.dc.Tree(ctx)
+	sysDept, err := s.dc.Tree(ctx, &query)
 	if err != nil {
 		response.Error(c, err)
 		return
@@ -51,17 +59,11 @@ func (s *department) Tree(c *gin.Context) {
 	response.Success(c, "获取成功！", deptTree)
 }
 
-// 新增
-
-func (s *department) Add(c *gin.Context) {
-	s.edit(c)
-}
-
 // 详情
 func (s *department) Show(c *gin.Context) {
 
 	var uri struct {
-		Id int64 `uri:"id" binding:"required"`
+		Id int64 `uri:"id"`
 	}
 	if err := c.ShouldBindUri(&uri); err != nil {
 		response.Error(c, err)
@@ -79,6 +81,11 @@ func (s *department) Show(c *gin.Context) {
 	response.Success(c, "获取成功！", dept)
 }
 
+// 新增
+func (s *department) Add(c *gin.Context) {
+	s.edit(c)
+}
+
 // 编辑
 func (s *department) Update(c *gin.Context) {
 	s.edit(c)
@@ -86,18 +93,20 @@ func (s *department) Update(c *gin.Context) {
 
 // 新增和编辑
 func (s *department) edit(c *gin.Context) {
-	var req biz.SysDept
+	var req struct {
+		DeptName  string `json:"deptName"`
+		ParentId  int64  `json:"parentId"`
+		ListOrder *int   `json:"listOrder"`
+		Status    *int   `json:"status"`
+		Remark    string `json:"remark"`
+	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.Error(c, response.ErrBind)
+		fmt.Println("err", err)
+		response.Error(c, err)
 		return
 	}
 
-	idParam := c.Param("id")
-	id, err := strconv.ParseInt(idParam, 10, 64)
-	if err != nil {
-		response.Error(c, response.ErrBind)
-		return
-	}
+	id := c.Param("id")
 
 	ctx := c.Request.Context()
 	userId, err := utils.UserID(c)
@@ -106,25 +115,35 @@ func (s *department) edit(c *gin.Context) {
 		return
 	}
 
+	var saveData biz.SysDept
+
 	// 新增
 	msg := ""
-	if id == 0 {
-		req.CreateId = userId
-		err = s.Context.dc.Add(ctx, &req)
+	if id == "" {
+		err = copier.Copy(&saveData, &req)
+		if err != nil {
+			response.Error(c, err)
+			return
+		}
+		saveData.CreateId = userId
+		err = s.Context.dc.Insert(ctx, &saveData)
 		msg = "添加成功！"
 	} else {
 
 		// 获取当前部门是否存在
-		one, err := s.Context.dc.Show(ctx, id)
+		idInt, err := strconv.ParseInt(id, 10, 64)
+		if err != nil {
+			response.Error(c, err)
+			return
+		}
+		one, err := s.Context.dc.Show(ctx, idInt)
 		if err != nil {
 			response.Error(c, err)
 			return
 		}
 
 		copier.Copy(&one, &req)
-
-		req.DeptID = id
-		req.UpdateId = userId
+		saveData.UpdateId = userId
 		err = s.Context.dc.Update(ctx, one)
 		if err != nil {
 			response.Error(c, err)
@@ -142,5 +161,15 @@ func (s *department) edit(c *gin.Context) {
 
 // 删除
 func (s *department) Delete(c *gin.Context) {
-	response.Success(c, "hello delete", nil)
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		response.Error(c, err)
+		return
+	}
+	sysDept, err := s.dc.Delete(c.Request.Context(), id)
+	if err != nil {
+		response.Error(c, err)
+		return
+	}
+	response.Success(c, "删除成功", sysDept)
 }

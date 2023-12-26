@@ -75,6 +75,7 @@ func RegisterHTTPServer(router *gin.Engine, svcCtx *service.Context) {
 			system.GET("/departments/:id", service.NewDeparment(svcCtx).Show)
 			system.POST("/departments", service.NewDeparment(svcCtx).Add)
 			system.POST("/departments/:id", service.NewDeparment(svcCtx).Update)
+			system.DELETE("/departments/:id", service.NewDeparment(svcCtx).Delete)
 
 			// 权限相关
 			// system.GET("/permissions/:id", service.NewAuthz(svcCtx).Index)

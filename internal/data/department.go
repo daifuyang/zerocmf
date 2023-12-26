@@ -2,6 +2,8 @@ package data
 
 import (
 	"context"
+	"fmt"
+	"time"
 	"zerocmf/internal/biz"
 )
 
@@ -9,8 +11,22 @@ type departmentRepo struct {
 	data *Data
 }
 
-// GetOneById implements biz.departmentRepo.
-func (repo *departmentRepo) GetOneById(ctx context.Context, id int64) (*biz.SysDept, error) {
+var (
+	deptCachePrefix = "cache:dept:id:"
+)
+
+// 查询全部部门列表
+func (repo *departmentRepo) Find(ctx context.Context, query *biz.SysDeptListQuery) ([]*biz.SysDept, error) {
+	sysDept := []*biz.SysDept{}
+	tx := repo.data.db.Find(&sysDept)
+	if tx.Error != nil {
+		return nil, tx.Error
+	}
+	return sysDept, nil
+}
+
+// 查看单个部门
+func (repo *departmentRepo) FindOne(ctx context.Context, id int64) (*biz.SysDept, error) {
 	dept := &biz.SysDept{
 		DeptID: id,
 	}
@@ -21,26 +37,25 @@ func (repo *departmentRepo) GetOneById(ctx context.Context, id int64) (*biz.SysD
 	return dept, nil
 }
 
-// Add implements biz.departmentRepo.
-func (repo *departmentRepo) Add(ctx context.Context, sysDept *biz.SysDept) error {
+// 添加部门
+func (repo *departmentRepo) Insert(ctx context.Context, sysDept *biz.SysDept) error {
 	tx := repo.data.db.Create(&sysDept)
 	return tx.Error
 }
 
-// update implements biz.departmentRepo.
+// 更新部门
 func (repo *departmentRepo) Update(ctx context.Context, sysDept *biz.SysDept) error {
+	key := fmt.Sprintf("%s%v", deptCachePrefix, sysDept.DeptID)
+	repo.data.rdb.Del(ctx, key)
 	tx := repo.data.db.Where("dept_id", sysDept.DeptID).Save(&sysDept)
 	return tx.Error
 }
 
-// 查询全部部门列表
-func (repo *departmentRepo) Index(ctx context.Context) ([]*biz.SysDept, error) {
-	sysDept := []*biz.SysDept{}
-	tx := repo.data.db.Find(&sysDept)
-	if tx.Error != nil {
-		return nil, tx.Error
-	}
-	return sysDept, nil
+// 删除部门
+func (repo *departmentRepo) Delete(ctx context.Context, id int64) error {
+	key := fmt.Sprintf("%s%v", deptCachePrefix, id)
+	repo.data.rdb.Del(ctx, key)
+	return repo.data.db.Model(&biz.SysDept{}).Where("post_id = ?", id).Update("deleted_at", time.Now()).Error
 }
 
 func NewDeparmentRepo(data *Data) biz.DepartmentRepo {
