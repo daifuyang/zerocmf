@@ -1,26 +1,15 @@
 # 快速启动
 
-```
+``` shell
 go run .\cmd\server
 ```
 
-# 配置
+# 核心功能
 
-## 环境变量
-
-# 快速上手
-
-## 创建领域对象
-
-```
-type testRepo struct {
-	data *Data
-}
-
-// NewTestRepo .
-func NewTestRepo(data *Data) biz.TestRepo {
-	return &testRepo{
-		data: data,
-	}
-}
-```
+- [ ] 用户管理
+- [ ] 部门管理
+- [ ] 岗位管理
+- [ ] 菜单管理
+- [ ] 角色管理
+- [ ] 操作日志
+- [ ] 登录日志
