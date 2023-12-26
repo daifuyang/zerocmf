@@ -3,6 +3,7 @@ package service
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"zerocmf/internal/biz"
 	"zerocmf/internal/utils"
 	"zerocmf/pkg/response"
@@ -55,6 +56,12 @@ func (s *department) Tree(c *gin.Context) {
 		response.Error(c, err)
 		return
 	}
+
+	if strings.TrimSpace(query.DeptName) != "" || query.Status != nil {
+		response.Success(c, "获取成功！", sysDept)
+		return
+	}
+
 	deptTree := buildDeptTree(sysDept, 0)
 	response.Success(c, "获取成功！", deptTree)
 }
@@ -166,7 +173,26 @@ func (s *department) Delete(c *gin.Context) {
 		response.Error(c, err)
 		return
 	}
-	sysDept, err := s.dc.Delete(c.Request.Context(), id)
+
+	if id == 1 {
+		response.Error(c, "顶级部门不能删除！")
+		return
+	}
+
+	ctx := c.Request.Context()
+
+	count, err := s.dc.CountByParentId(ctx, id)
+	if err != nil {
+		response.Error(c, err)
+		return
+	}
+
+	if count > 0 {
+		response.Error(c, "请先删除子部门！")
+		return
+	}
+
+	sysDept, err := s.dc.Delete(ctx, id)
 	if err != nil {
 		response.Error(c, err)
 		return

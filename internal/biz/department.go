@@ -8,10 +8,10 @@ import (
 )
 
 type SysDept struct {
-	DeptID    int64      `gorm:"column:deptId;type:int(11);primaryKey;comment:部门id" uri:"id" json:"deptId"`
-	ParentID  int64      `gorm:"column:parentId;type:bigint;default:0;comment:父部门id" json:"parentId"`
+	DeptID    int64      `gorm:"column:dept_id;type:int(11);primaryKey;comment:部门id" uri:"id" json:"deptId"`
+	ParentID  int64      `gorm:"column:parent_id;type:bigint;default:0;comment:父部门id" json:"parentId"`
 	Ancestors string     `gorm:"column:ancestors;type:varchar(50);default:'';comment:祖级列表" json:"ancestors"`
-	DeptName  string     `gorm:"column:deptName;type:varchar(30);default:'';comment:部门名称" json:"deptName"`
+	DeptName  string     `gorm:"column:dept_name;type:varchar(30);default:'';comment:部门名称" json:"deptName"`
 	ListOrder int        `gorm:"column:list_order;type:int(11);default:0;comment:显示顺序" json:"listOrder"`
 	Leader    string     `gorm:"column:leader;type:varchar(20);default:null;comment:负责人" json:"leader"`
 	Phone     string     `gorm:"column:phone;type:varchar(11);default:null;comment:联系电话" json:"phone"`
@@ -59,6 +59,7 @@ func (biz *SysDept) AutoMigrate(db *gorm.DB) error {
 
 type DepartmentRepo interface {
 	Find(ctx context.Context, listQuery *SysDeptListQuery) ([]*SysDept, error) // 查看全部
+	CountByParentId(ctx context.Context, parentId int64) (int64, error)        // 根据父类统计数量
 	FindOne(ctx context.Context, id int64) (*SysDept, error)                   // 查看单条
 	Insert(ctx context.Context, sysDept *SysDept) error                        // 添加部门
 	Update(ctx context.Context, sysDept *SysDept) error                        // 更新部门
@@ -99,6 +100,11 @@ func (biz *Depatmentusecase) Insert(ctx context.Context, sysDept *SysDept) error
 	return biz.repo.Insert(ctx, sysDept)
 }
 
+// 根据父类id统计数量
+func (biz *Depatmentusecase) CountByParentId(ctx context.Context, parentId int64) (int64, error) {
+	return biz.repo.CountByParentId(ctx, parentId)
+}
+
 // 查看部门
 func (biz *Depatmentusecase) Show(ctx context.Context, id int64) (*SysDept, error) {
 	return biz.repo.FindOne(ctx, id)
@@ -117,10 +123,12 @@ func (biz *Depatmentusecase) Update(ctx context.Context, sysDept *SysDept) error
 
 // 删除部门
 func (biz *Depatmentusecase) Delete(ctx context.Context, id int64) (*SysDept, error) {
+
 	one, err := biz.repo.FindOne(ctx, id)
 	if err != nil {
 		return nil, err
 	}
+
 	err = biz.repo.Delete(ctx, id)
 	if err != nil {
 		return nil, err
