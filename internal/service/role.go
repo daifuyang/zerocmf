@@ -3,6 +3,7 @@ package service
 import (
 	"strconv"
 	"zerocmf/internal/biz"
+	"zerocmf/internal/utils"
 	"zerocmf/pkg/response"
 
 	"github.com/gin-gonic/gin"
@@ -93,7 +94,15 @@ func (s *role) Save(c *gin.Context) {
 
 	var saveData biz.SysRole
 
+	userId, err := utils.UserID(c)
+	if err != nil {
+		response.Error(c, err)
+		return
+	}
+
 	msg := "添加成功！"
+
+	ctx := c.Request.Context()
 
 	if id == "" {
 		err := copier.Copy(&saveData, &req)
@@ -102,7 +111,9 @@ func (s *role) Save(c *gin.Context) {
 			return
 		}
 
-		err = s.rc.Insert(c.Request.Context(), &saveData)
+		saveData.CreateId = userId
+
+		err = s.rc.Insert(ctx, &saveData)
 		if err != nil {
 			response.Error(c, err)
 			return
@@ -114,7 +125,7 @@ func (s *role) Save(c *gin.Context) {
 			response.Error(c, err)
 			return
 		}
-		role, err := s.rc.FindOne(c.Request.Context(), idInt)
+		role, err := s.rc.FindOne(ctx, idInt)
 		if err != nil {
 			response.Error(c, err)
 			return
@@ -126,7 +137,8 @@ func (s *role) Save(c *gin.Context) {
 			return
 		}
 
-		err = s.rc.Update(c.Request.Context(), role)
+		saveData.UpdateId = userId
+		err = s.rc.Update(ctx, role)
 		if err != nil {
 			response.Error(c, err)
 			return

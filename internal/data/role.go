@@ -66,7 +66,7 @@ func (repo *roleRepo) Find(ctx context.Context, listQuery *biz.SysRoleListQuery)
 		return
 	}
 
-	tx = repo.data.db.Where(queryStr, queryArgs...).Offset(offset).Limit(pageSize).Find(&roles)
+	tx = repo.data.db.Where(queryStr, queryArgs...).Offset(offset).Limit(pageSize).Order("list_order").Find(&roles)
 	if tx.Error != nil {
 		err = tx.Error
 		return
@@ -154,10 +154,14 @@ func (repo *roleRepo) Insert(ctx context.Context, role *biz.SysRole) (err error)
 		for i, v := range role.MenuIds {
 			menuIds[i] = strconv.Itoa(*v)
 		}
-		_, err = e.AddPermissionForUser(roleId, menuIds...)
-		if err != nil {
-			return err
+
+		for _, id := range menuIds {
+			_, err = e.AddPermissionForUser(roleId, id)
+			if err != nil {
+				return err
+			}
 		}
+
 		// 返回 nil 提交事务
 		return nil
 	})

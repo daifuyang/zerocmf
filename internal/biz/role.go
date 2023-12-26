@@ -7,7 +7,7 @@ import (
 )
 
 type SysRole struct {
-	RoleID            int64  `gorm:"column:role_id;primaryKey;comment:角色ID" json:"roleId"`
+	RoleID            int64  `gorm:"column:role_id;type:int(11);primaryKey;comment:角色ID" json:"roleId"`
 	RoleName          string `gorm:"column:role_name;not null;comment:角色名称" json:"roleName"`
 	ListOrder         int    `gorm:"column:list_order;type:int(8);default:0;comment:显示顺序" json:"listOrder"`
 	DataScope         int    `gorm:"column:data_scope;type:tinyint(2);default:0;comment:数据范围（0：全部数据权限 1：自定数据权限 2：本部门数据权限 3：本部门及以下数据权限）" json:"dataScope"`
@@ -92,6 +92,12 @@ func (biz *Roleusecase) Insert(ctx context.Context, role *SysRole) error {
 
 // 更新一条数据
 func (biz *Roleusecase) Update(ctx context.Context, role *SysRole) error {
+
+	_, err := biz.repo.FindOne(ctx, role.RoleID)
+	if err != nil {
+		return err
+	}
+
 	return biz.repo.Update(ctx, role)
 }
 
