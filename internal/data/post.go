@@ -66,7 +66,7 @@ func (repo *PostRepo) Find(ctx context.Context, listQuery *biz.SysPostListQuery)
 		return
 	}
 
-	tx = repo.data.db.Where(queryStr, queryArgs...).Offset(offset).Limit(pageSize).Find(&posts)
+	tx = repo.data.db.Where(queryStr, queryArgs...).Offset(offset).Limit(pageSize).Order("list_order").Find(&posts)
 	if tx.Error != nil {
 		err = tx.Error
 		return
@@ -82,6 +82,7 @@ func (repo *PostRepo) Find(ctx context.Context, listQuery *biz.SysPostListQuery)
 
 }
 
+// 根据条件查询一条岗位
 func (repo *PostRepo) First(query interface{}, args ...interface{}) (*biz.SysPost, error) {
 	var sysPost *biz.SysPost
 	tx := repo.data.db.Where(query, args...).First(&sysPost)
@@ -91,19 +92,17 @@ func (repo *PostRepo) First(query interface{}, args ...interface{}) (*biz.SysPos
 	return sysPost, nil
 }
 
-// 获取
+// 根据id获取一条岗位
 func (repo *PostRepo) FindOne(ctx context.Context, id int64) (*biz.SysPost, error) {
-
 	var sysPost *biz.SysPost
-	key := fmt.Sprintf("%s%v", postCachePrefix, id)
 
+	key := fmt.Sprintf("%s%v", postCachePrefix, id)
 	err := repo.data.RGet(ctx, &sysPost, key)
 	if err != redis.Nil {
 		return sysPost, nil
 	}
 
 	tx := repo.data.db.Where("post_id = ? AND deleted_at is null", id).First(&sysPost)
-
 	if tx.Error != nil {
 		return nil, tx.Error
 	}
@@ -115,16 +114,15 @@ func (repo *PostRepo) FindOne(ctx context.Context, id int64) (*biz.SysPost, erro
 	}
 
 	return sysPost, nil
-
 }
 
-// 插入当个岗位
+// 插入单个岗位
 func (repo *PostRepo) Insert(ctx context.Context, post *biz.SysPost) (err error) {
 	tx := repo.data.db.Create(&post)
 	return tx.Error
 }
 
-// Update implements biz.PostRepo.
+// 更新单个岗位
 func (repo *PostRepo) Update(ctx context.Context, post *biz.SysPost) (err error) {
 
 	key := fmt.Sprintf("%s%v", postCachePrefix, post.PostID)
@@ -134,7 +132,7 @@ func (repo *PostRepo) Update(ctx context.Context, post *biz.SysPost) (err error)
 	return tx.Error
 }
 
-// Delete implements biz.PostRepo.
+// 删除单个岗位
 func (repo *PostRepo) Delete(ctx context.Context, id int64) error {
 	key := fmt.Sprintf("%s%v", postCachePrefix, id)
 	repo.data.rdb.Del(ctx, key)

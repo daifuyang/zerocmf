@@ -8,7 +8,7 @@ import (
 
 // SysPost 表示 sys_post 表的数据模型
 type SysPost struct {
-	PostID    int64  `gorm:"column:post_id;primaryKey;comment:岗位ID" json:"postId"`
+	PostID    int64  `gorm:"column:post_id;type:int(11);primaryKey;comment:岗位ID" json:"postId"`
 	PostCode  string `gorm:"column:post_code;type:varchar(64);not null;comment:岗位编码" json:"postCode"`
 	PostName  string `gorm:"column:post_name;type:varchar(50);not null;comment:岗位名称" json:"postName"`
 	ListOrder int    `gorm:"column:list_order;not null;type:int(8);comment:显示顺序" json:"listOrder"`
@@ -84,8 +84,8 @@ type PostRepo interface {
 	Find(ctx context.Context, listQuery *SysPostListQuery) (interface{}, error) // 查看全部
 	First(query interface{}, args ...interface{}) (*SysPost, error)             // 根据条件查询一条
 	FindOne(ctx context.Context, id int64) (*SysPost, error)                    // 查询一条
-	Insert(ctx context.Context, post *SysPost) (err error)                      // 插入一条
-	Update(ctx context.Context, post *SysPost) (err error)                      // 更新一条
+	Insert(ctx context.Context, post *SysPost) error                            // 插入一条
+	Update(ctx context.Context, post *SysPost) error                            // 更新一条
 	Delete(ctx context.Context, id int64) error                                 // 删除一条
 }
 
@@ -123,6 +123,12 @@ func (biz *Postusecase) Insert(ctx context.Context, post *SysPost) error {
 
 // 更新一条数据
 func (biz *Postusecase) Update(ctx context.Context, post *SysPost) error {
+
+	_, err := biz.repo.FindOne(ctx, post.PostID)
+	if err != nil {
+		return err
+	}
+
 	return biz.repo.Update(ctx, post)
 }
 
