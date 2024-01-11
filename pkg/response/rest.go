@@ -41,6 +41,8 @@ func Error(c *gin.Context, msg interface{}) {
 		res.Msg = msg.(string)
 	case error:
 		err := msg.(error)
+		res.Msg = err.Error()
+
 		// 身份失效
 		if errors.Is(err, ErrAuth) {
 			code = http.StatusUnauthorized
@@ -51,12 +53,11 @@ func Error(c *gin.Context, msg interface{}) {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			res.Msg = gorm.ErrRecordNotFound.Error()
 		}
+
 		// 绑定失败则是非法请求，直接重定向到404
 		if errors.Is(err, ErrBind) {
 			code = http.StatusNotFound
 		}
-
-		res.Data = err.Error()
 
 	}
 	c.JSON(code, res)
