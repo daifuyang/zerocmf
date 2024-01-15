@@ -11,27 +11,26 @@ import (
 )
 
 type User struct {
-	UserID      uint64    `gorm:"primaryKey;autoIncrement;size:20" json:"userId"`
-	DeptID      *uint64   `gorm:"index;comment:部门ID;size:20;type:bigint(20)" json:"deptId"`
+	UserID      int64     `gorm:"primaryKey;autoIncrement;size:20" json:"userId"`
+	DeptID      *int64    `gorm:"index;comment:部门ID;size:20;type:bigint(20)" json:"deptId"`
 	LoginName   string    `gorm:"comment:登录账号;size:30;type:varchar(30)" json:"loginName"`
 	UserName    string    `gorm:"comment:用户昵称;size:30;type:varchar(30)" json:"userName"`
 	ListOrder   int       `gorm:"column:list_order;default:0;comment:显示顺序" json:"listOrder"`
-	UserType    uint      `gorm:"default:1;comment:用户类型（0:系统用户 1:注册用户）;size:2;type:tinyint(2)" json:"userType"`
+	UserType    int       `gorm:"default:1;comment:用户类型（1:系统用户 0:注册用户）;size:2;type:tinyint(2)" json:"userType"`
 	Email       string    `gorm:"default:null;comment:用户邮箱;size:50;type:varchar(50)" json:"email"`
 	PhoneNumber string    `gorm:"default:null;comment:手机号码;size:11;type:varchar(11)" json:"phoneNumber"`
-	Gender      uint      `gorm:"default:0;comment:用户性别（0男 1女 2未知）;size:2;type:tinyint(2)" json:"gender"`
+	Gender      int       `gorm:"default:0;comment:用户性别（0男 1女 2未知）;size:2;type:tinyint(2)" json:"gender"`
 	Avatar      string    `gorm:"comment:头像路径;size:100;type:varchar(100)" json:"avatar"`
 	Password    string    `gorm:"not null;comment:密码;size:100;type:varchar(100)" json:"-"`
 	Salt        string    `gorm:"comment:盐加密;size:20;type:varchar(20)" json:"salt"`
-	Status      uint      `gorm:"default:1;comment:帐号状态（0：停用 ,1：启用）;size:2;type:tinyint(2)" json:"status"`
+	Status      int       `gorm:"default:1;comment:帐号状态（0：停用 ,1：启用）;size:2;type:tinyint(2)" json:"status"`
 	LoginIP     string    `gorm:"default:'';comment:最后登录IP;size:128;type:varchar(128)" json:"loginIP"`
 	LoginedAt   LocalTime `gorm:"autoCreateTime" json:"loginedAt"`
 	PwdUpdateAt LocalTime `gorm:"autoUpdateTime" json:"pwdUpdatedAt"`
-	OperateId   uint64    `gorm:"comment:操作人;index" json:"operateId"`
-	CreatedAt   LocalTime `gorm:"autoCreateTime;index" json:"createdAt"`
-	UpdatedAt   LocalTime `gorm:"autoUpdateTime;index" json:"updatedAt"`
-	DeletedAt   LocalTime `gorm:"default:null;comment:删除时间;index" json:"deletedAt"`
-	Remark      string    `gorm:"comment:备注;size:500;type:varchar(500)" json:"remark"`
+	SysInfo
+	Remark    string    `gorm:"comment:备注;size:500;type:varchar(500)" json:"remark"`
+	PostCodes *[]string `gorm:"-" json:"postIds"`
+	RoleIds   *[]int64  `gorm:"-" json:"roleIds"`
 }
 
 // TableName 指定表名
@@ -62,13 +61,13 @@ func (biz *User) AutoMigrate(db *gorm.DB, salt string) error {
 
 // 定义data层接口
 type UserRepo interface {
-	FindOne(ctx context.Context, id int64) (*User, error)
 	Token(ctx context.Context, user *User) (*oauth2.Token, error)        // 获取token
 	ValidationBearerToken(req *http.Request) (v4Oauth2.TokenInfo, error) //验证token
-	CreateUser(ctx context.Context, user *User) error
 	FindUserByAccount(ctx context.Context, account string) (*User, error)
 	FindUserByPhoneNumber(ctx context.Context, phoneNumber string) (*User, error)
 	Find(ctx context.Context, query *UserListQuery) (*Paginate, error) // 查询列表
+	FindOne(ctx context.Context, id int64) (*User, error)
+	Insert(ctx context.Context, user *User) error // 新增用户
 }
 
 type Userusecase struct {
@@ -115,10 +114,12 @@ func (uc *Userusecase) ValidationBearerToken(req *http.Request) (v4Oauth2.TokenI
 	return uc.repo.ValidationBearerToken(req)
 }
 
-// 注册
-func (uc *Userusecase) Register(ctx context.Context, user *User) error {
-	return uc.repo.CreateUser(ctx, user)
+// 新增
+func (uc *Userusecase) Insert(ctx context.Context, user *User) error {
+	return uc.repo.Insert(ctx, user)
 }
+
+// 更新
 
 // 根据id查询单个用户
 func (uc *Userusecase) FindUserByUserID(ctx context.Context, userID int64) (*User, error) {

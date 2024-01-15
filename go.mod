@@ -1,6 +1,6 @@
 module zerocmf
 
-go 1.21.2
+go 1.20
 
 require (
 	github.com/casbin/casbin/v2 v2.77.2

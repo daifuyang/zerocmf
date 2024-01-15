@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type SysRole struct {
+type Role struct {
 	RoleID            int64  `gorm:"column:role_id;type:int(11);primaryKey;comment:角色ID" json:"roleId"`
 	RoleName          string `gorm:"column:role_name;not null;comment:角色名称" json:"roleName"`
 	ListOrder         int    `gorm:"column:list_order;type:int(8);default:0;comment:显示顺序" json:"listOrder"`
@@ -19,19 +19,19 @@ type SysRole struct {
 	SysInfo
 }
 
-type SysRoleListQuery struct {
+type RoleListQuery struct {
 	RoleName string `form:"roleName"`
 	Status   *int   `form:"status"`
 	PaginateQuery
 }
 
 // 设置表名
-func (*SysRole) TableName() string {
-	return "sys_role"
+func (*Role) TableName() string {
+	return "cmf_role"
 }
 
 // 数据库迁移
-func (biz *SysRole) AutoMigrate(db *gorm.DB) error {
+func (biz *Role) AutoMigrate(db *gorm.DB) error {
 	err := db.AutoMigrate(&biz)
 	if err != nil {
 		return err
@@ -39,7 +39,7 @@ func (biz *SysRole) AutoMigrate(db *gorm.DB) error {
 
 	// 创建演示数据
 
-	if err := db.Where("role_name = '超级管理员'").FirstOrCreate(&SysRole{
+	if err := db.Where("role_name = '超级管理员'").FirstOrCreate(&Role{
 		RoleName: "超级管理员",
 		SysInfo: SysInfo{
 			CreateId: 1,
@@ -52,12 +52,12 @@ func (biz *SysRole) AutoMigrate(db *gorm.DB) error {
 }
 
 type RoleRepo interface {
-	Find(ctx context.Context, listQuery *SysRoleListQuery) (interface{}, error) // 查看全部
-	FindOne(ctx context.Context, id int64) (*SysRole, error)                    // 查询一条
-	FindPermissions(ctx context.Context, id int64) ([]*int, error)              // 查询角色授权通过的权限
-	Insert(ctx context.Context, role *SysRole) (err error)                      // 插入一条
-	Update(ctx context.Context, role *SysRole) (err error)                      // 更新一条
-	Delete(ctx context.Context, id int64) error                                 // 删除一条
+	Find(ctx context.Context, listQuery *RoleListQuery) (interface{}, error) // 查看全部
+	FindOne(ctx context.Context, id int64) (*Role, error)                    // 查询一条
+	FindPermissions(ctx context.Context, id int64) ([]*int, error)           // 查询角色授权通过的权限
+	Insert(ctx context.Context, role *Role) (err error)                      // 插入一条
+	Update(ctx context.Context, role *Role) (err error)                      // 更新一条
+	Delete(ctx context.Context, id int64) error                              // 删除一条
 }
 
 type Roleusecase struct {
@@ -71,12 +71,12 @@ func NewRoleusecase(repo RoleRepo) *Roleusecase {
 }
 
 // 获取全部数据
-func (biz *Roleusecase) Find(ctx context.Context, listQuery *SysRoleListQuery) (interface{}, error) {
+func (biz *Roleusecase) Find(ctx context.Context, listQuery *RoleListQuery) (interface{}, error) {
 	return biz.repo.Find(ctx, listQuery)
 }
 
 // 查看一条数据
-func (biz *Roleusecase) FindOne(ctx context.Context, id int64) (*SysRole, error) {
+func (biz *Roleusecase) FindOne(ctx context.Context, id int64) (*Role, error) {
 	return biz.repo.FindOne(ctx, id)
 }
 
@@ -86,12 +86,12 @@ func (biz *Roleusecase) FindPermissions(ctx context.Context, id int64) ([]*int, 
 }
 
 // 新增一条数据
-func (biz *Roleusecase) Insert(ctx context.Context, role *SysRole) error {
+func (biz *Roleusecase) Insert(ctx context.Context, role *Role) error {
 	return biz.repo.Insert(ctx, role)
 }
 
 // 更新一条数据
-func (biz *Roleusecase) Update(ctx context.Context, role *SysRole) error {
+func (biz *Roleusecase) Update(ctx context.Context, role *Role) error {
 
 	_, err := biz.repo.FindOne(ctx, role.RoleID)
 	if err != nil {
@@ -102,7 +102,7 @@ func (biz *Roleusecase) Update(ctx context.Context, role *SysRole) error {
 }
 
 // 删除一条数据
-func (biz *Roleusecase) Delete(ctx context.Context, id int64) (*SysRole, error) {
+func (biz *Roleusecase) Delete(ctx context.Context, id int64) (*Role, error) {
 	one, err := biz.repo.FindOne(ctx, id)
 	if err != nil {
 		return nil, err

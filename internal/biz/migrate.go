@@ -14,22 +14,32 @@ func AutoMigrate(db *gorm.DB, config *configs.Config) error {
 		return err
 	}
 
-	err = new(SysDept).AutoMigrate(db)
+	err = new(Dept).AutoMigrate(db)
 	if err != nil {
 		return err
 	}
 
-	err = new(SysMenu).AutoMigrate(db)
+	err = new(Menu).AutoMigrate(db)
 	if err != nil {
 		return err
 	}
 
-	err = new(SysRole).AutoMigrate(db)
+	err = new(Role).AutoMigrate(db)
 	if err != nil {
 		return err
 	}
 
-	err = new(SysPost).AutoMigrate(db)
+	err = new(Post).AutoMigrate(db)
+	if err != nil {
+		return err
+	}
+
+	err = new(UserRole).AutoMigrate(db)
+	if err != nil {
+		return err
+	}
+
+	err = new(UserPost).AutoMigrate(db)
 	if err != nil {
 		return err
 	}

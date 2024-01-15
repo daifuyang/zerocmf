@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type SysMenu struct {
+type Menu struct {
 	MenuID    int64      `gorm:"column:menu_id;primaryKey;comment:菜单ID" json:"menuId"`
 	MenuName  string     `gorm:"column:menu_name;not null;comment:菜单名称" json:"menuName" binding:"required"`
 	ParentID  int64      `gorm:"column:parent_id;default:0;comment:父菜单ID" json:"parentId"`
@@ -24,15 +24,15 @@ type SysMenu struct {
 	UpdatedAt LocalTime  `gorm:"column:updated_at;autoUpdateTime;index;comment:更新时间" json:"updatedAt"`
 	DeletedAt *LocalTime `gorm:"column:deleted_at;default:null;index;comment:删除时间" json:"deletedAt"`
 	Remark    string     `gorm:"column:remark;default:'';comment:备注" json:"remark"`
-	Children  []*SysMenu `gorm:"-" json:"children,omitempty"`
+	Children  []*Menu    `gorm:"-" json:"children,omitempty"`
 }
 
-func (SysMenu) TableName() string {
-	return "sys_menu"
+func (Menu) TableName() string {
+	return "cmf_menu"
 }
 
 // 数据库迁移
-func (biz *SysMenu) AutoMigrate(db *gorm.DB) error {
+func (biz *Menu) AutoMigrate(db *gorm.DB) error {
 	err := db.AutoMigrate(&biz)
 	if err != nil {
 		return err
@@ -41,12 +41,12 @@ func (biz *SysMenu) AutoMigrate(db *gorm.DB) error {
 }
 
 type MenuRepo interface {
-	Find(ctx context.Context) (menus []*SysMenu, err error)                   // 查看全部
-	FindOne(ctx context.Context, id int64) (*SysMenu, error)                  // 查询一条
-	FindOneByMenuName(ctx context.Context, menuName string) (*SysMenu, error) // 根据菜单名称查找
-	Insert(ctx context.Context, menu *SysMenu) (err error)                    // 插入一条
-	Update(ctx context.Context, menu *SysMenu) (err error)                    // 更新一条
-	Delete(ctx context.Context, id int64) error                               // 删除一条
+	Find(ctx context.Context) (menus []*Menu, err error)                   // 查看全部
+	FindOne(ctx context.Context, id int64) (*Menu, error)                  // 查询一条
+	FindOneByMenuName(ctx context.Context, menuName string) (*Menu, error) // 根据菜单名称查找
+	Insert(ctx context.Context, menu *Menu) (err error)                    // 插入一条
+	Update(ctx context.Context, menu *Menu) (err error)                    // 更新一条
+	Delete(ctx context.Context, id int64) error                            // 删除一条
 }
 
 type Menusecase struct {
@@ -58,32 +58,32 @@ func NewMenusecase(repo MenuRepo) *Menusecase {
 }
 
 // 根据菜单名称获取菜单
-func (biz *Menusecase) FindOneByMenuName(ctx context.Context, menuName string) (sysMenu *SysMenu, err error) {
+func (biz *Menusecase) FindOneByMenuName(ctx context.Context, menuName string) (Menu *Menu, err error) {
 	return biz.repo.FindOneByMenuName(ctx, menuName)
 }
 
 // 获取全部数据
-func (biz *Menusecase) Find(ctx context.Context) (sysMenus []*SysMenu, err error) {
+func (biz *Menusecase) Find(ctx context.Context) (Menus []*Menu, err error) {
 	return biz.repo.Find(ctx)
 }
 
 // 查看一条数据
-func (biz *Menusecase) FindOne(ctx context.Context, id int64) (*SysMenu, error) {
+func (biz *Menusecase) FindOne(ctx context.Context, id int64) (*Menu, error) {
 	return biz.repo.FindOne(ctx, id)
 }
 
 // 插入一条数据
-func (biz *Menusecase) Insert(ctx context.Context, menu *SysMenu) (err error) {
+func (biz *Menusecase) Insert(ctx context.Context, menu *Menu) (err error) {
 	return biz.repo.Insert(ctx, menu)
 }
 
 // 更新一条数据
-func (biz *Menusecase) Update(ctx context.Context, menu *SysMenu) (err error) {
+func (biz *Menusecase) Update(ctx context.Context, menu *Menu) (err error) {
 	return biz.repo.Update(ctx, menu)
 }
 
 // 软删除一条数据
-func (biz *Menusecase) Delete(ctx context.Context, id int64) (*SysMenu, error) {
+func (biz *Menusecase) Delete(ctx context.Context, id int64) (*Menu, error) {
 	one, err := biz.repo.FindOne(ctx, id)
 	if err != nil {
 		return nil, err

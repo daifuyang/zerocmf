@@ -23,13 +23,13 @@ func NewRole(c *Context) *role {
 // 获取所有角色
 func (s *role) List(c *gin.Context) {
 
-	var query biz.SysRoleListQuery
+	var query biz.RoleListQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
 		response.Error(c, err)
 		return
 	}
 
-	data, err := s.rc.Find(c.Request.Context(), &query)
+	data, err := s.roleuc.Find(c.Request.Context(), &query)
 	if err != nil {
 		response.Error(c, err)
 		return
@@ -46,13 +46,13 @@ func (s *role) Show(c *gin.Context) {
 		return
 	}
 
-	data, err := s.rc.FindOne(c.Request.Context(), id)
+	data, err := s.roleuc.FindOne(c.Request.Context(), id)
 	if err != nil {
 		response.Error(c, err)
 		return
 	}
 
-	menuIds, err := s.rc.FindPermissions(c.Request.Context(), id)
+	menuIds, err := s.roleuc.FindPermissions(c.Request.Context(), id)
 	if err != nil {
 		response.Error(c, err)
 		return
@@ -69,7 +69,7 @@ func (s *role) Add(c *gin.Context) {
 }
 
 // 更新角色信息
-func (s *role) Update(c *gin.Context) {
+func (s *role) Edit(c *gin.Context) {
 	s.Save(c)
 }
 
@@ -92,7 +92,7 @@ func (s *role) Save(c *gin.Context) {
 		return
 	}
 
-	var saveData biz.SysRole
+	var saveData biz.Role
 
 	userId, err := utils.UserID(c)
 	if err != nil {
@@ -113,7 +113,7 @@ func (s *role) Save(c *gin.Context) {
 
 		saveData.CreateId = userId
 
-		err = s.rc.Insert(ctx, &saveData)
+		err = s.roleuc.Insert(ctx, &saveData)
 		if err != nil {
 			response.Error(c, err)
 			return
@@ -125,7 +125,7 @@ func (s *role) Save(c *gin.Context) {
 			response.Error(c, err)
 			return
 		}
-		role, err := s.rc.FindOne(ctx, idInt)
+		role, err := s.roleuc.FindOne(ctx, idInt)
 		if err != nil {
 			response.Error(c, err)
 			return
@@ -138,7 +138,7 @@ func (s *role) Save(c *gin.Context) {
 		}
 
 		saveData.UpdateId = userId
-		err = s.rc.Update(ctx, role)
+		err = s.roleuc.Update(ctx, role)
 		if err != nil {
 			response.Error(c, err)
 			return
@@ -157,13 +157,13 @@ func (s *role) Delete(c *gin.Context) {
 		return
 	}
 
-	sysRole, err := s.rc.Delete(c.Request.Context(), id)
+	Role, err := s.roleuc.Delete(c.Request.Context(), id)
 
 	if err != nil {
 		response.Error(c, err)
 		return
 	}
 
-	response.Success(c, "删除成功", sysRole)
+	response.Success(c, "删除成功", Role)
 
 }

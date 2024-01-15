@@ -32,7 +32,7 @@ func (s *Context) Register(c *gin.Context) {
 		if utils.AccountType(account) == "phone" {
 
 			// 查询当前账号是否存在
-			user, err := s.uc.FindUserByPhoneNumber(ctx, account)
+			user, err := s.useruc.FindUserByPhoneNumber(ctx, account)
 			if err != nil {
 				response.Error(c, err)
 				return
@@ -82,7 +82,7 @@ func (s *Context) Register(c *gin.Context) {
 				Salt:        salt,
 				Password:    hashedPassword,
 			}
-			err = s.uc.Register(ctx, user)
+			err = s.useruc.Insert(ctx, user)
 			if err != nil {
 				response.Error(c, err)
 				return
@@ -167,7 +167,7 @@ func (s *Context) Login(c *gin.Context) {
 		return
 	}
 
-	user, err := s.uc.FindUserByAccount(ctx, account)
+	user, err := s.useruc.FindUserByAccount(ctx, account)
 	if err != nil {
 		response.Error(c, err.Error())
 		return
@@ -183,7 +183,7 @@ func (s *Context) Login(c *gin.Context) {
 		return
 	}
 
-	token, err := s.uc.Token(ctx, user)
+	token, err := s.useruc.Token(ctx, user)
 	if err != nil {
 		response.Error(c, err)
 		return
@@ -197,7 +197,7 @@ func (s *Context) CurrentUser(c *gin.Context) {
 	ctx := c.Request.Context()
 	id := c.GetString("userId")
 	idInt, _ := strconv.ParseInt(id, 10, 64)
-	user, err := s.uc.FindUserByUserID(ctx, idInt)
+	user, err := s.useruc.FindUserByUserID(ctx, idInt)
 	if err != nil {
 		response.Error(c, err)
 		return
@@ -207,7 +207,7 @@ func (s *Context) CurrentUser(c *gin.Context) {
 
 // 校验用户信息
 func (s *Context) AuthMiddleware(c *gin.Context) {
-	token, err := s.uc.ValidationBearerToken(c.Request)
+	token, err := s.useruc.ValidationBearerToken(c.Request)
 	if err != nil {
 		response.Error(c, response.ErrAuth)
 		return

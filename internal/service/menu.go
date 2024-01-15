@@ -25,7 +25,7 @@ func NewMenu(c *Context) *menu {
 }
 
 // 解析配置文件
-func mustLoad(configFile string, menu *[]*biz.SysMenu) {
+func mustLoad(configFile string, menu *[]*biz.Menu) {
 	// 解析配置项
 	data, err := os.ReadFile(configFile)
 	if err != nil {
@@ -40,7 +40,7 @@ func mustLoad(configFile string, menu *[]*biz.SysMenu) {
 // 配置文件导入菜单
 func (s *menu) ImportMenu() {
 
-	var menu []*biz.SysMenu
+	var menu []*biz.Menu
 
 	currentDir, err := os.Getwd()
 	if err != nil {
@@ -57,7 +57,7 @@ func (s *menu) ImportMenu() {
 }
 
 // 递归导入菜单
-func (s *menu) recursionImportMenu(ctx context.Context, menu []*biz.SysMenu, parentId int64, perms string) {
+func (s *menu) recursionImportMenu(ctx context.Context, menu []*biz.Menu, parentId int64, perms string) {
 	for k, v := range menu {
 
 		newPerms := v.Perms
@@ -66,14 +66,14 @@ func (s *menu) recursionImportMenu(ctx context.Context, menu []*biz.SysMenu, par
 		}
 
 		// 查询菜单是否存在
-		one, err := s.mc.FindOneByMenuName(ctx, v.MenuName)
+		one, err := s.menusuc.FindOneByMenuName(ctx, v.MenuName)
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			panic("导入菜单失败：" + err.Error())
 		}
 
 		ListOrder := int64(k) + 1
 
-		localOne := &biz.SysMenu{
+		localOne := &biz.Menu{
 			MenuName:  v.MenuName,
 			ParentID:  parentId,
 			Path:      v.Path,
@@ -92,9 +92,9 @@ func (s *menu) recursionImportMenu(ctx context.Context, menu []*biz.SysMenu, par
 			localOne.Icon = one.Icon
 			localOne.CreatedAt = one.CreatedAt
 			localOne.Remark = one.Remark
-			s.mc.Update(ctx, one)
+			s.menusuc.Update(ctx, one)
 		} else {
-			s.mc.Insert(ctx, localOne)
+			s.menusuc.Insert(ctx, localOne)
 		}
 		nextParentId := localOne.MenuID
 		if v.Children != nil {
@@ -104,8 +104,8 @@ func (s *menu) recursionImportMenu(ctx context.Context, menu []*biz.SysMenu, par
 }
 
 // 递归显示树菜单
-func recursionMenu(menu []*biz.SysMenu, parentId int64) []*biz.SysMenu {
-	var result = make([]*biz.SysMenu, 0)
+func recursionMenu(menu []*biz.Menu, parentId int64) []*biz.Menu {
+	var result = make([]*biz.Menu, 0)
 	for _, v := range menu {
 		if v.ParentID == parentId {
 			children := recursionMenu(menu, v.MenuID)
@@ -121,12 +121,12 @@ func recursionMenu(menu []*biz.SysMenu, parentId int64) []*biz.SysMenu {
 
 // 查看全部菜单树
 func (s *menu) Tree(c *gin.Context) {
-	sysMenu, err := s.mc.Find(c.Request.Context())
+	Menu, err := s.menusuc.Find(c.Request.Context())
 	if err != nil {
 		response.Error(c, err)
 		return
 	}
-	menus := recursionMenu(sysMenu, 0)
+	menus := recursionMenu(Menu, 0)
 	response.Success(c, "获取成功！", menus)
 }
 
@@ -142,7 +142,7 @@ func (s *menu) Show(c *gin.Context) {
 		response.Error(c, err)
 		return
 	}
-	menu, err := s.mc.FindOne(c.Request.Context(), id)
+	menu, err := s.menusuc.FindOne(c.Request.Context(), id)
 	if err != nil {
 		response.Error(c, err)
 		return
@@ -151,7 +151,7 @@ func (s *menu) Show(c *gin.Context) {
 }
 
 // 更新一条菜单
-func (s *menu) Update(c *gin.Context) {
+func (s *menu) Edit(c *gin.Context) {
 	s.Save(c)
 }
 
@@ -177,7 +177,7 @@ func (s *menu) Save(c *gin.Context) {
 		return
 	}
 
-	var saveData biz.SysMenu
+	var saveData biz.Menu
 
 	msg := "添加成功！"
 
@@ -188,7 +188,7 @@ func (s *menu) Save(c *gin.Context) {
 			return
 		}
 
-		err = s.mc.Insert(c.Request.Context(), &saveData)
+		err = s.menusuc.Insert(c.Request.Context(), &saveData)
 		if err != nil {
 			response.Error(c, err)
 			return
@@ -199,7 +199,7 @@ func (s *menu) Save(c *gin.Context) {
 			response.Error(c, err)
 			return
 		}
-		menu, err := s.mc.FindOne(c.Request.Context(), idInt)
+		menu, err := s.menusuc.FindOne(c.Request.Context(), idInt)
 		if err != nil {
 			response.Error(c, err)
 			return
@@ -213,7 +213,7 @@ func (s *menu) Save(c *gin.Context) {
 
 		saveData = *menu
 
-		err = s.mc.Update(c.Request.Context(), &saveData)
+		err = s.menusuc.Update(c.Request.Context(), &saveData)
 		if err != nil {
 			response.Error(c, err)
 			return
@@ -235,13 +235,13 @@ func (s *menu) Delete(c *gin.Context) {
 		return
 	}
 
-	sysMenu, err := s.mc.Delete(c.Request.Context(), id)
+	Menu, err := s.menusuc.Delete(c.Request.Context(), id)
 	if err != nil {
 		response.Error(c, err)
 		return
 	}
 
-	response.Success(c, "删除成功！", sysMenu)
+	response.Success(c, "删除成功！", Menu)
 }
 
 // 批量删除菜单

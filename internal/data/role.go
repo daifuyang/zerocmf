@@ -26,7 +26,7 @@ var (
 )
 
 // 查询全部
-func (repo *roleRepo) Find(ctx context.Context, listQuery *biz.SysRoleListQuery) (data interface{}, err error) {
+func (repo *roleRepo) Find(ctx context.Context, listQuery *biz.RoleListQuery) (data interface{}, err error) {
 
 	var total int64 = 0
 	query := []string{"deleted_at is null"}
@@ -44,7 +44,7 @@ func (repo *roleRepo) Find(ctx context.Context, listQuery *biz.SysRoleListQuery)
 
 	queryStr := strings.Join(query, " and ")
 
-	var roles []*biz.SysRole
+	var roles []*biz.Role
 
 	current, pageSize := biz.ParsePaginate(listQuery.Current, listQuery.PageSize)
 
@@ -60,7 +60,7 @@ func (repo *roleRepo) Find(ctx context.Context, listQuery *biz.SysRoleListQuery)
 		return
 	}
 
-	tx := repo.data.db.Model(&biz.SysRole{}).Where("deleted_at is null").Count(&total)
+	tx := repo.data.db.Model(&biz.Role{}).Where("deleted_at is null").Count(&total)
 	if tx.Error != nil {
 		err = tx.Error
 		return
@@ -82,28 +82,28 @@ func (repo *roleRepo) Find(ctx context.Context, listQuery *biz.SysRoleListQuery)
 }
 
 // 根据角色id获取单个角色
-func (repo *roleRepo) FindOne(ctx context.Context, id int64) (*biz.SysRole, error) {
-	var sysRole *biz.SysRole
+func (repo *roleRepo) FindOne(ctx context.Context, id int64) (*biz.Role, error) {
+	var Role *biz.Role
 	key := fmt.Sprintf("%s%v", roleCachePrefix, id)
 
-	err := repo.data.RGet(ctx, &sysRole, key)
+	err := repo.data.RGet(ctx, &Role, key)
 	if err != redis.Nil {
-		return sysRole, nil
+		return Role, nil
 	}
 
-	tx := repo.data.db.Where("role_id = ? AND deleted_at is null", id).First(&sysRole)
+	tx := repo.data.db.Where("role_id = ? AND deleted_at is null", id).First(&Role)
 
 	if tx.Error != nil {
 		return nil, tx.Error
 	}
 
 	// 将结果存入redis
-	err = repo.data.RSet(ctx, key, sysRole)
+	err = repo.data.RSet(ctx, key, Role)
 	if err != nil {
 		return nil, err
 	}
 
-	return sysRole, nil
+	return Role, nil
 }
 
 // 根基角色id获取授权通过的权限列表
@@ -139,7 +139,7 @@ func (repo *roleRepo) FindPermissions(ctx context.Context, id int64) ([]*int, er
 }
 
 // 插入一条数据
-func (repo *roleRepo) Insert(ctx context.Context, role *biz.SysRole) (err error) {
+func (repo *roleRepo) Insert(ctx context.Context, role *biz.Role) (err error) {
 
 	e := repo.data.e
 	db := repo.data.db
@@ -178,7 +178,7 @@ func contains(arr []string, val string) bool {
 }
 
 // 更新一条数据
-func (repo *roleRepo) Update(ctx context.Context, role *biz.SysRole) (err error) {
+func (repo *roleRepo) Update(ctx context.Context, role *biz.Role) (err error) {
 
 	roleId := role.RoleID
 	roleIdStr := strconv.FormatInt(roleId, 10)
@@ -256,5 +256,5 @@ func (repo *roleRepo) Delete(ctx context.Context, id int64) error {
 	permKey := fmt.Sprintf("%s%v", rolePermCachePrefix, id)
 	repo.data.rdb.Del(ctx, permKey)
 
-	return repo.data.db.Model(&biz.SysRole{}).Where("role_id = ?", id).Update("deleted_at", time.Now()).Error
+	return repo.data.db.Model(&biz.Role{}).Where("role_id = ?", id).Update("deleted_at", time.Now()).Error
 }

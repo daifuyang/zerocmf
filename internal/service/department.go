@@ -1,7 +1,6 @@
 package service
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 	"zerocmf/internal/biz"
@@ -24,11 +23,11 @@ func NewDeparment(c *Context) *department {
 }
 
 type DeptTree struct {
-	biz.SysDept
+	biz.Dept
 	Children []*DeptTree `json:"children,omitempty"`
 }
 
-func buildDeptTree(depts []*biz.SysDept, parentID int64) []*DeptTree {
+func buildDeptTree(depts []*biz.Dept, parentID int64) []*DeptTree {
 	tree := make([]*DeptTree, 0)
 	for _, dept := range depts {
 		if dept.ParentID == parentID {
@@ -45,24 +44,24 @@ func buildDeptTree(depts []*biz.SysDept, parentID int64) []*DeptTree {
 func (s *department) Tree(c *gin.Context) {
 
 	// 解析请求参数
-	var query biz.SysDeptListQuery
+	var query biz.DeptListQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
 		response.Error(c, err)
 		return
 	}
 	ctx := c.Request.Context()
-	sysDept, err := s.dc.Tree(ctx, &query)
+	Dept, err := s.deptuc.Tree(ctx, &query)
 	if err != nil {
 		response.Error(c, err)
 		return
 	}
 
 	if strings.TrimSpace(query.DeptName) != "" || query.Status != nil {
-		response.Success(c, "获取成功！", sysDept)
+		response.Success(c, "获取成功！", Dept)
 		return
 	}
 
-	deptTree := buildDeptTree(sysDept, 0)
+	deptTree := buildDeptTree(Dept, 0)
 	response.Success(c, "获取成功！", deptTree)
 }
 
@@ -80,7 +79,7 @@ func (s *department) Show(c *gin.Context) {
 	id := uri.Id
 
 	ctx := c.Request.Context()
-	dept, err := s.Context.dc.Show(ctx, id)
+	dept, err := s.deptuc.Show(ctx, id)
 	if err != nil {
 		response.Error(c, err)
 		return
@@ -90,16 +89,16 @@ func (s *department) Show(c *gin.Context) {
 
 // 新增
 func (s *department) Add(c *gin.Context) {
-	s.edit(c)
+	s.save(c)
 }
 
 // 编辑
-func (s *department) Update(c *gin.Context) {
-	s.edit(c)
+func (s *department) Edit(c *gin.Context) {
+	s.save(c)
 }
 
 // 新增和编辑
-func (s *department) edit(c *gin.Context) {
+func (s *department) save(c *gin.Context) {
 	var req struct {
 		DeptName  string `json:"deptName"`
 		ParentId  int64  `json:"parentId"`
@@ -108,7 +107,6 @@ func (s *department) edit(c *gin.Context) {
 		Remark    string `json:"remark"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		fmt.Println("err", err)
 		response.Error(c, err)
 		return
 	}
@@ -122,7 +120,7 @@ func (s *department) edit(c *gin.Context) {
 		return
 	}
 
-	var saveData biz.SysDept
+	var saveData biz.Dept
 
 	// 新增
 	msg := ""
@@ -133,7 +131,7 @@ func (s *department) edit(c *gin.Context) {
 			return
 		}
 		saveData.CreateId = userId
-		err = s.Context.dc.Insert(ctx, &saveData)
+		err = s.deptuc.Insert(ctx, &saveData)
 		msg = "添加成功！"
 	} else {
 
@@ -143,7 +141,7 @@ func (s *department) edit(c *gin.Context) {
 			response.Error(c, err)
 			return
 		}
-		one, err := s.Context.dc.Show(ctx, idInt)
+		one, err := s.deptuc.Show(ctx, idInt)
 		if err != nil {
 			response.Error(c, err)
 			return
@@ -151,7 +149,7 @@ func (s *department) edit(c *gin.Context) {
 
 		copier.Copy(&one, &req)
 		saveData.UpdateId = userId
-		err = s.Context.dc.Update(ctx, one)
+		err = s.deptuc.Update(ctx, one)
 		if err != nil {
 			response.Error(c, err)
 			return
@@ -181,7 +179,7 @@ func (s *department) Delete(c *gin.Context) {
 
 	ctx := c.Request.Context()
 
-	count, err := s.dc.CountByParentId(ctx, id)
+	count, err := s.deptuc.CountByParentId(ctx, id)
 	if err != nil {
 		response.Error(c, err)
 		return
@@ -192,10 +190,10 @@ func (s *department) Delete(c *gin.Context) {
 		return
 	}
 
-	sysDept, err := s.dc.Delete(ctx, id)
+	Dept, err := s.deptuc.Delete(ctx, id)
 	if err != nil {
 		response.Error(c, err)
 		return
 	}
-	response.Success(c, "删除成功", sysDept)
+	response.Success(c, "删除成功", Dept)
 }

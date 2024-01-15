@@ -19,7 +19,7 @@ var (
 )
 
 // 获取岗位列表
-func (repo *PostRepo) Find(ctx context.Context, listQuery *biz.SysPostListQuery) (data interface{}, err error) {
+func (repo *PostRepo) Find(ctx context.Context, listQuery *biz.PostListQuery) (data interface{}, err error) {
 
 	var total int64 = 0
 	query := []string{"deleted_at is null"}
@@ -44,7 +44,7 @@ func (repo *PostRepo) Find(ctx context.Context, listQuery *biz.SysPostListQuery)
 
 	queryStr := strings.Join(query, " and ")
 
-	var posts []*biz.SysPost
+	var posts []*biz.Post
 
 	current, pageSize := biz.ParsePaginate(listQuery.Current, listQuery.PageSize)
 
@@ -60,7 +60,7 @@ func (repo *PostRepo) Find(ctx context.Context, listQuery *biz.SysPostListQuery)
 		return
 	}
 
-	tx := repo.data.db.Model(&biz.SysPost{}).Where("deleted_at is null").Count(&total)
+	tx := repo.data.db.Model(&biz.Post{}).Where("deleted_at is null").Count(&total)
 	if tx.Error != nil {
 		err = tx.Error
 		return
@@ -83,47 +83,47 @@ func (repo *PostRepo) Find(ctx context.Context, listQuery *biz.SysPostListQuery)
 }
 
 // 根据条件查询一条岗位
-func (repo *PostRepo) First(query interface{}, args ...interface{}) (*biz.SysPost, error) {
-	var sysPost *biz.SysPost
-	tx := repo.data.db.Where(query, args...).First(&sysPost)
+func (repo *PostRepo) First(query interface{}, args ...interface{}) (*biz.Post, error) {
+	var Post *biz.Post
+	tx := repo.data.db.Where(query, args...).First(&Post)
 	if tx.Error != nil {
 		return nil, tx.Error
 	}
-	return sysPost, nil
+	return Post, nil
 }
 
 // 根据id获取一条岗位
-func (repo *PostRepo) FindOne(ctx context.Context, id int64) (*biz.SysPost, error) {
-	var sysPost *biz.SysPost
+func (repo *PostRepo) FindOne(ctx context.Context, id int64) (*biz.Post, error) {
+	var Post *biz.Post
 
 	key := fmt.Sprintf("%s%v", postCachePrefix, id)
-	err := repo.data.RGet(ctx, &sysPost, key)
+	err := repo.data.RGet(ctx, &Post, key)
 	if err != redis.Nil {
-		return sysPost, nil
+		return Post, nil
 	}
 
-	tx := repo.data.db.Where("post_id = ? AND deleted_at is null", id).First(&sysPost)
+	tx := repo.data.db.Where("post_id = ? AND deleted_at is null", id).First(&Post)
 	if tx.Error != nil {
 		return nil, tx.Error
 	}
 
 	// 将结果存入redis
-	err = repo.data.RSet(ctx, key, sysPost)
+	err = repo.data.RSet(ctx, key, Post)
 	if err != nil {
 		return nil, err
 	}
 
-	return sysPost, nil
+	return Post, nil
 }
 
 // 插入单个岗位
-func (repo *PostRepo) Insert(ctx context.Context, post *biz.SysPost) (err error) {
+func (repo *PostRepo) Insert(ctx context.Context, post *biz.Post) (err error) {
 	tx := repo.data.db.Create(&post)
 	return tx.Error
 }
 
 // 更新单个岗位
-func (repo *PostRepo) Update(ctx context.Context, post *biz.SysPost) (err error) {
+func (repo *PostRepo) Update(ctx context.Context, post *biz.Post) (err error) {
 
 	key := fmt.Sprintf("%s%v", postCachePrefix, post.PostID)
 	repo.data.rdb.Del(ctx, key)
@@ -136,7 +136,7 @@ func (repo *PostRepo) Update(ctx context.Context, post *biz.SysPost) (err error)
 func (repo *PostRepo) Delete(ctx context.Context, id int64) error {
 	key := fmt.Sprintf("%s%v", postCachePrefix, id)
 	repo.data.rdb.Del(ctx, key)
-	return repo.data.db.Model(&biz.SysPost{}).Where("post_id = ?", id).Update("deleted_at", time.Now()).Error
+	return repo.data.db.Model(&biz.Post{}).Where("post_id = ?", id).Update("deleted_at", time.Now()).Error
 }
 
 func NewPostRepo(data *Data) biz.PostRepo {

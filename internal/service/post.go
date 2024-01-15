@@ -25,7 +25,7 @@ func NewPost(c *Context) *post {
 // 获取所有岗位
 func (s *post) List(c *gin.Context) {
 	// 解析请求参数
-	var query biz.SysPostListQuery
+	var query biz.PostListQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
 		response.Error(c, err)
 		return
@@ -62,7 +62,7 @@ func (s *post) Add(c *gin.Context) {
 }
 
 // 更新单个岗位
-func (s *post) Update(c *gin.Context) {
+func (s *post) Edit(c *gin.Context) {
 	s.Save(c)
 }
 
@@ -84,7 +84,7 @@ func (s *post) Save(c *gin.Context) {
 		response.Error(c, err)
 		return
 	}
-	var saveData biz.SysPost
+	var post biz.Post
 
 	userId, err := utils.UserID(c)
 	if err != nil {
@@ -111,15 +111,14 @@ func (s *post) Save(c *gin.Context) {
 			return
 		}
 
-		err = copier.Copy(&saveData, &req)
+		err = copier.Copy(&post, &req)
 		if err != nil {
 			response.Error(c, err)
 			return
 		}
 
-		saveData.CreateId = userId
-
-		err = s.postuc.Insert(ctx, &saveData)
+		post.CreateId = userId
+		err = s.postuc.Insert(ctx, &post)
 		if err != nil {
 			response.Error(c, err)
 			return
@@ -147,16 +146,16 @@ func (s *post) Save(c *gin.Context) {
 			return
 		}
 
-		saveData.UpdateId = userId
+		post.UpdateId = userId
 		err = s.postuc.Update(ctx, one)
 		if err != nil {
 			response.Error(c, err)
 			return
 		}
-		saveData = *one
+		post = *one
 		msg = "修改成功！"
 	}
-	response.Success(c, msg, saveData)
+	response.Success(c, msg, post)
 }
 
 // 删除单个岗位
@@ -167,12 +166,12 @@ func (s *post) Delete(c *gin.Context) {
 		return
 	}
 
-	sysPost, err := s.postuc.Delete(c.Request.Context(), id)
+	Post, err := s.postuc.Delete(c.Request.Context(), id)
 
 	if err != nil {
 		response.Error(c, err)
 		return
 	}
 
-	response.Success(c, "删除成功", sysPost)
+	response.Success(c, "删除成功", Post)
 }

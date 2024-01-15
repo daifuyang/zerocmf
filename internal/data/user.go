@@ -24,7 +24,7 @@ type userRepo struct {
 	data *Data
 }
 
-// Find implements biz.UserRepo.
+// 查询列表
 func (repo *userRepo) Find(ctx context.Context, listQuery *biz.UserListQuery) (*biz.Paginate, error) {
 
 	var total int64 = 0
@@ -93,7 +93,7 @@ func (repo *userRepo) Token(ctx context.Context, user *biz.User) (*oauth2.Token,
 	return token, nil
 }
 
-// FindUserByAccount implements biz.UserRepo.
+// 根据账号查询单个用户
 func (repo *userRepo) FindUserByAccount(ctx context.Context, account string) (*biz.User, error) {
 	user := &biz.User{}
 	query := "login_name = ?"
@@ -114,7 +114,7 @@ func (repo *userRepo) FindUserByAccount(ctx context.Context, account string) (*b
 	return user, nil
 }
 
-// FindUserByPhoneNumber implements biz.UserRepo.
+// 根据手机查询单个用户
 func (repo *userRepo) FindUserByPhoneNumber(ctx context.Context, phoneNumber string) (*biz.User, error) {
 	user := &biz.User{}
 	tx := repo.data.db.Where("phone_number = ?", phoneNumber).First(user)
@@ -127,7 +127,7 @@ func (repo *userRepo) FindUserByPhoneNumber(ctx context.Context, phoneNumber str
 	return user, nil
 }
 
-// FindUserByUserID implements biz.UserRepo.
+// 根据用户id查询单个用户
 func (repo *userRepo) FindOne(ctx context.Context, UserID int64) (*biz.User, error) {
 
 	var user *biz.User
@@ -153,11 +153,67 @@ func (repo *userRepo) FindOne(ctx context.Context, UserID int64) (*biz.User, err
 
 }
 
-// CreateUser implements biz.UserRepo.
-func (repo *userRepo) CreateUser(ctx context.Context, user *biz.User) error {
-	tx := repo.data.db.Create(&user)
-	if tx.Error != nil {
-		return tx.Error
+// 查询单个用户
+func (repo *userRepo) Insert(ctx context.Context, user *biz.User) error {
+
+	userType := user.UserType
+	if userType == 0 {
+		tx := repo.data.db.Create(&user)
+		if tx.Error != nil {
+			return tx.Error
+		}
+	} else {
+		// 系统用户
+		/*
+			1.先创建用户，
+			2.根据用户id分配岗位和角色关系表
+		*/
+		// 开启事务
+
+		postCodes := user.PostCodes
+		var userPosts = []biz.UserPost{}
+		roleIds := user.RoleIds
+		var userRoles = []biz.UserRole{}
+
+		repo.data.db.Transaction(func(tx *gorm.DB) error {
+			// 创建用户
+			if err := tx.Create(&user).Error; err != nil {
+				return err
+			}
+
+			// 新增后的id
+			userId := user.UserID
+
+			// 分配用户和角色的关系
+			if roleIds != nil {
+				for _, roleId := range *roleIds {
+					userRole := biz.UserRole{
+						UserID: userId,
+						RoleID: roleId,
+					}
+					userRoles = append(userRoles, userRole)
+				}
+				if err := tx.Debug().Create(&userRoles).Error; err != nil {
+					return err
+				}
+			}
+
+			// 分配用户和岗位的关系
+			if postCodes != nil {
+				for _, postCode := range *postCodes {
+					userPost := biz.UserPost{
+						UserID:   userId,
+						PostCode: postCode,
+					}
+					userPosts = append(userPosts, userPost)
+				}
+				if err := tx.Debug().Create(&userPosts).Error; err != nil {
+					return err
+				}
+			}
+
+			return nil
+		})
 	}
 
 	key := fmt.Sprintf("%s%v", userCachePrefix, user.UserID)

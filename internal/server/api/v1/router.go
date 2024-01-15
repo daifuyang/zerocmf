@@ -40,21 +40,21 @@ func RegisterHTTPServer(router *gin.Engine, svcCtx *service.Context) {
 			user.GET("/roles", service.NewRole(svcCtx).List)
 			user.GET("/roles/:id", service.NewRole(svcCtx).Show)
 			user.POST("/roles", service.NewRole(svcCtx).Add)
-			user.POST("/roles/:id", service.NewRole(svcCtx).Update)
+			user.POST("/roles/:id", service.NewRole(svcCtx).Edit)
 			user.DELETE("/roles/:id", service.NewRole(svcCtx).Delete)
 
 			// 部门管理
 			user.GET("/posts", service.NewPost(svcCtx).List)
 			user.GET("/posts/:id", service.NewPost(svcCtx).Show)
 			user.POST("/posts", service.NewPost(svcCtx).Add)
-			user.POST("/posts/:id", service.NewPost(svcCtx).Update)
+			user.POST("/posts/:id", service.NewPost(svcCtx).Edit)
 			user.DELETE("/posts/:id", service.NewPost(svcCtx).Delete)
 
 			// 管理员相关
 			user.GET("/admins", service.NewAdmin(svcCtx).List)
 			user.GET("/admins/:id", service.NewAdmin(svcCtx).List)
 			user.POST("/admins", service.NewAdmin(svcCtx).Add)
-			user.POST("/admins/:id", service.NewAdmin(svcCtx).Update)
+			user.POST("/admins/:id", service.NewAdmin(svcCtx).Edit)
 			user.DELETE("/admins/:id", service.NewAdmin(svcCtx).Delete)
 		}
 
@@ -67,14 +67,14 @@ func RegisterHTTPServer(router *gin.Engine, svcCtx *service.Context) {
 			system.GET("/menus", service.NewMenu(svcCtx).Tree)
 			system.GET("/menus/:id", service.NewMenu(svcCtx).Show)
 			system.POST("/menus", service.NewMenu(svcCtx).Add)
-			system.POST("/menus/:id", service.NewMenu(svcCtx).Update)
+			system.POST("/menus/:id", service.NewMenu(svcCtx).Edit)
 			system.DELETE("/menus/:id", service.NewMenu(svcCtx).Delete)
 
 			// 部门相关
 			system.GET("/departments", service.NewDeparment(svcCtx).Tree)
 			system.GET("/departments/:id", service.NewDeparment(svcCtx).Show)
 			system.POST("/departments", service.NewDeparment(svcCtx).Add)
-			system.POST("/departments/:id", service.NewDeparment(svcCtx).Update)
+			system.POST("/departments/:id", service.NewDeparment(svcCtx).Edit)
 			system.DELETE("/departments/:id", service.NewDeparment(svcCtx).Delete)
 
 			// 权限相关
