@@ -38,3 +38,5 @@ type UserRoleusecase struct {
 func NewUserRoleUsecase(repo UserRoleRepo) *UserRoleusecase {
 	return &UserRoleusecase{repo: repo}
 }
+
+// todo 获取用户绑定的角色列表

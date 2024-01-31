@@ -38,3 +38,5 @@ type UserPostusecase struct {
 func NewUserPostUsecase(repo UserPostRepo) *UserPostusecase {
 	return &UserPostusecase{repo: repo}
 }
+
+// todo 获取用户绑定的岗位列表

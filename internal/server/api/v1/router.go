@@ -52,7 +52,7 @@ func RegisterHTTPServer(router *gin.Engine, svcCtx *service.Context) {
 
 			// 管理员相关
 			user.GET("/admins", service.NewAdmin(svcCtx).List)
-			user.GET("/admins/:id", service.NewAdmin(svcCtx).List)
+			user.GET("/admins/:id", service.NewAdmin(svcCtx).Show)
 			user.POST("/admins", service.NewAdmin(svcCtx).Add)
 			user.POST("/admins/:id", service.NewAdmin(svcCtx).Edit)
 			user.DELETE("/admins/:id", service.NewAdmin(svcCtx).Delete)

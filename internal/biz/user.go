@@ -67,7 +67,9 @@ type UserRepo interface {
 	FindUserByPhoneNumber(ctx context.Context, phoneNumber string) (*User, error)
 	Find(ctx context.Context, query *UserListQuery) (*Paginate, error) // 查询列表
 	FindOne(ctx context.Context, id int64) (*User, error)
-	Insert(ctx context.Context, user *User) error // 新增用户
+	Insert(ctx context.Context, user *User) error  // 新增用户
+	Update(ctx context.Context, user *User) error  // 更新用户
+	DeleteOne(ctx context.Context, id int64) error // 删除用户
 }
 
 type Userusecase struct {
@@ -120,6 +122,14 @@ func (uc *Userusecase) Insert(ctx context.Context, user *User) error {
 }
 
 // 更新
+func (uc *Userusecase) Update(ctx context.Context, user *User) error {
+	return uc.repo.Update(ctx, user)
+}
+
+// 删除
+func (uc *Userusecase) DeleteOne(ctx context.Context, id int64) error {
+	return uc.repo.DeleteOne(ctx, id)
+}
 
 // 根据id查询单个用户
 func (uc *Userusecase) FindUserByUserID(ctx context.Context, userID int64) (*User, error) {

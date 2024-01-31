@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 	"zerocmf/internal/biz"
 	"zerocmf/internal/utils"
 
@@ -31,7 +32,7 @@ func (repo *userRepo) Find(ctx context.Context, listQuery *biz.UserListQuery) (*
 
 	userType := listQuery.UserType
 
-	query := "user_type = ?"
+	query := "user_type = ? AND deleted_at IS NULL"
 	queryArgs := []interface{}{userType}
 
 	tx := repo.data.db.Where(query, queryArgs...).Model(&biz.User{}).Count(&total)
@@ -153,7 +154,7 @@ func (repo *userRepo) FindOne(ctx context.Context, UserID int64) (*biz.User, err
 
 }
 
-// 查询单个用户
+// 新增单个用户
 func (repo *userRepo) Insert(ctx context.Context, user *biz.User) error {
 
 	userType := user.UserType
@@ -193,7 +194,7 @@ func (repo *userRepo) Insert(ctx context.Context, user *biz.User) error {
 					}
 					userRoles = append(userRoles, userRole)
 				}
-				if err := tx.Debug().Create(&userRoles).Error; err != nil {
+				if err := tx.Create(&userRoles).Error; err != nil {
 					return err
 				}
 			}
@@ -207,7 +208,7 @@ func (repo *userRepo) Insert(ctx context.Context, user *biz.User) error {
 					}
 					userPosts = append(userPosts, userPost)
 				}
-				if err := tx.Debug().Create(&userPosts).Error; err != nil {
+				if err := tx.Create(&userPosts).Error; err != nil {
 					return err
 				}
 			}
@@ -219,6 +220,27 @@ func (repo *userRepo) Insert(ctx context.Context, user *biz.User) error {
 	key := fmt.Sprintf("%s%v", userCachePrefix, user.UserID)
 	repo.data.RSet(ctx, key, user)
 	return nil
+}
+
+// 更新单个用户
+func (repo *userRepo) Update(ctx context.Context, user *biz.User) error {
+	userType := user.UserType
+	if userType == 0 {
+		tx := repo.data.db.Save(&user)
+		if tx.Error != nil {
+			return tx.Error
+		}
+	} else {
+
+	}
+	return nil
+}
+
+// 删除单个用户
+func (repo *userRepo) DeleteOne(ctx context.Context, id int64) error {
+	key := fmt.Sprintf("%s%v", postCachePrefix, id)
+	repo.data.rdb.Del(ctx, key)
+	return repo.data.db.Model(&biz.User{}).Where("user_id = ?", id).Update("deleted_at", time.Now()).Error
 }
 
 func NewUserRepo(data *Data) biz.UserRepo {

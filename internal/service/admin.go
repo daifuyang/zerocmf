@@ -1,9 +1,11 @@
 package service
 
 import (
+	"strconv"
 	"strings"
 	"zerocmf/internal/biz"
 	"zerocmf/internal/utils"
+	"zerocmf/pkg/hashed"
 	"zerocmf/pkg/response"
 
 	"github.com/gin-gonic/gin"
@@ -34,7 +36,24 @@ func (s *admin) List(c *gin.Context) {
 // 获取单个管理员
 
 func (s *admin) Show(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		response.Error(c, err)
+		return
+	}
+	ctx := c.Request.Context()
 
+	user, err := s.useruc.FindUserByUserID(ctx, id)
+	if err != nil {
+		response.Error(c, err)
+		return
+	}
+
+	// 获取当前绑定的岗位信息
+
+	// 获取当前绑定的角色信息
+
+	response.Success(c, "获取成功！", user)
 }
 
 // 创建管理员
@@ -100,27 +119,63 @@ func (s *admin) Save(c *gin.Context) {
 		req.UserType = &userType
 	}
 
+	err = copier.Copy(&user, &req)
+	if err != nil {
+		response.Error(c, err)
+		return
+	}
+
+	salt := s.Config.Mysql.Salt
+	password, err := hashed.Password("123456", salt)
+	if err != nil {
+		response.Error(c, err)
+		return
+	}
+	user.Password = password
+
+	var msg = ""
+
 	if id == "" {
 		// 创建
-		err := copier.Copy(&user, &req)
 		user.CreateId = userId
-		if err != nil {
-			response.Error(c, err)
-			return
-		}
 		err = s.useruc.Insert(ctx, &user)
 		if err != nil {
 			response.Error(c, err)
 			return
 		}
-		response.Success(c, "创建成功！", user)
+		msg = "创建成功！"
 	} else {
-
+		user.UpdateId = userId
+		err = s.useruc.Update(ctx, &user)
+		if err != nil {
+			response.Error(c, err)
+			return
+		}
+		msg = "更新成功！"
 	}
-
+	response.Success(c, msg, user)
 }
 
 // 删除单个管理员账号
 func (s *admin) Delete(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		response.Error(c, err)
+		return
+	}
+	ctx := c.Request.Context()
 
+	// 先判断是否存在管理员
+	user, err := s.useruc.FindUserByUserID(ctx, id)
+	if err != nil {
+		response.Error(c, err)
+		return
+	}
+
+	err = s.useruc.DeleteOne(ctx, id)
+	if err != nil {
+		response.Error(c, err)
+		return
+	}
+	response.Success(c, "删除成功！", user)
 }
