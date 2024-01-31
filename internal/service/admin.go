@@ -96,7 +96,8 @@ func (s *admin) Save(c *gin.Context) {
 	}
 
 	if req.UserType == nil {
-		*req.UserType = 1
+		var userType = 1
+		req.UserType = &userType
 	}
 
 	if id == "" {
